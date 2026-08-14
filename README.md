@@ -1,4 +1,4 @@
-# Goldz — أسعار الذهب في مصر
+# Goldz — أسعار الذهب في مصر والسعودية
 
 Live gold, silver and currency prices for the Egyptian market, built with Flutter.
 
