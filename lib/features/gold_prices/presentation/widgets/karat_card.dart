@@ -5,7 +5,7 @@ import 'sparkline.dart';
 class KaratCard extends StatelessWidget {
   final String karat;
   final String title; // 🆕 e.g. 'Karat 21' / 'Sterling 925' / 'Euro'
-  final String change;
+  final String? change;
   final String priceEgp;
   final String priceUsd;
   final bool isPositive;
@@ -14,8 +14,8 @@ class KaratCard extends StatelessWidget {
   const KaratCard({
     super.key,
     required this.karat,
-    required this.title, // 🆕
-    required this.change,
+    required this.title, //
+    this.change,
     required this.priceEgp,
     required this.priceUsd,
     this.isPositive = true,
@@ -63,15 +63,16 @@ class KaratCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: trendColor.withOpacity(0.12),
+                  color: (change == null ? AppColors.textMuted : trendColor)
+                      .withOpacity(0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  change,
+                  change ?? '—',
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
-                    color: trendColor,
+                    color: change == null ? AppColors.textMuted : trendColor,
                   ),
                 ),
               ),

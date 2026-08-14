@@ -8,12 +8,16 @@ import '../../../../core/utils/formatters.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
-import '../../data/dummy_market_data.dart';
+import '../../domain/entities/market_snapshot.dart';
 import '../../domain/entities/price_item.dart';
+import '../cubit/market_cubit.dart';
+import '../cubit/market_state.dart';
 import '../widgets/currency_sheet.dart';
 import '../widgets/karat_card.dart';
 import '../widgets/live_price_card.dart';
 import 'all_prices_screen.dart';
+
+const _gramsPerOunce = 31.1035;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,6 +29,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   MarketCategory _category = MarketCategory.gold;
   int _navIndex = 0;
+
 
   @override
   Widget build(BuildContext context) {
@@ -41,66 +46,16 @@ class _HomeScreenState extends State<HomeScreen> {
           bottom: false,
           child: BlocBuilder<CurrencyCubit, AppCurrency>(
             builder: (context, currency) {
-              final items = DummyMarketData.of(_category);
-              final headline = DummyMarketData.headline(_category);
-
-              return RefreshIndicator(
-                color: AppColors.gold,
-                backgroundColor: AppColors.card,
-                onRefresh: () async =>
-                    Future.delayed(const Duration(milliseconds: 800)),
-                child: ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  children: [
-                    const SizedBox(height: 10),
-                    _buildHeader(currency),
-                    const SizedBox(height: 20),
-                    _buildTabs(),
-                    const SizedBox(height: 20),
-
-                    // ── Hero card ──
-                    LivePriceCard(
-                      title: '${_category.label} · ${headline.label}',
-                      price: formatPrice(headline.valueIn(currency.perUsd)),
-                      unit: '${currency.code} ${headline.unit}'.trim(),
-                      changePercent:
-                          formatPercent(headline.changePercent).substring(1),
-                      isPositive: headline.isPositive,
-                      usdPerGram:
-                          '\$${formatPrice(headline.usdValue)} ${headline.unit}'
-                              .trim(),
-                      usdPerOunce: _category == MarketCategory.currency
-                          ? 'per unit'
-                          : '\$${formatPrice(headline.usdValue * DummyMarketData.gramsPerOunce)} / oz',
-                      chartData: headline.trend,
-                    ),
-                    const SizedBox(height: 26),
-
-                    // ── Horizontal list + See all ──
-                    _buildSectionHeader(
-                      _category.sectionTitle,
-                      'See all',
-                      onAction: _openAllPrices,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildHorizontalList(items, currency),
-                    const SizedBox(height: 26),
-
-                    // ── Stats grid ──
-                    _buildSectionHeader(
-                      _category == MarketCategory.currency
-                          ? 'MARKET'
-                          : 'OUNCE',
-                      '',
-                    ),
-                    const SizedBox(height: 12),
-                    _buildStatsGrid(currency),
-                    const SizedBox(height: 20),
-                    _buildUpdatedFooter(),
-                    const SizedBox(height: 28),
-                  ],
-                ),
+              return BlocBuilder<MarketCubit, MarketState>(
+                builder: (context, market) {
+                  return RefreshIndicator(
+                    color: AppColors.gold,
+                    backgroundColor: AppColors.card,
+                    onRefresh: () =>
+                        context.read<MarketCubit>().load(forceRefresh: true),
+                    child: _buildBody(currency, market),
+                  );
+                },
               );
             },
           ),
@@ -110,11 +65,181 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildBody(AppCurrency currency, MarketState market) {
+    final snapshot = market.snapshot;
+
+    // First load, nothing cached yet.
+    if (snapshot == null) {
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        children: [
+          const SizedBox(height: 10),
+          _buildHeader(currency),
+          const SizedBox(height: 80),
+          if (market.isLoading)
+            const Center(
+              child: CircularProgressIndicator(color: AppColors.gold),
+            )
+          else
+            _buildErrorState(market.error),
+        ],
+      );
+    }
+
+    // Live conversion rate, falling back to the built-in value.
+    final rate = snapshot.rateFor(currency.code, currency.perUsd);
+
+    final items = snapshot.of(_category);
+    if (items.isEmpty) {
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        children: [
+          const SizedBox(height: 10),
+          _buildHeader(currency),
+          const SizedBox(height: 60),
+          Center(
+            child: Text(
+              'No ${_category.label.toLowerCase()} data available right now.',
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+        ],
+      );
+    }
+
+    final headline = snapshot.headline(_category);
+
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      children: [
+        const SizedBox(height: 10),
+        _buildHeader(currency),
+        if (market.isStale || market.error != null) ...[
+          const SizedBox(height: 12),
+          _buildStatusBanner(market),
+        ],
+        const SizedBox(height: 20),
+        _buildTabs(),
+        const SizedBox(height: 20),
+
+        LivePriceCard(
+          title: '${_category.label} · ${headline.label}',
+          price: formatPrice(headline.valueIn(rate)),
+          unit: '${currency.code} ${headline.unit}'.trim(),
+          changePercent: formatPercentOrNull(headline.changePercent),
+          isPositive: headline.isPositive,
+          usdPerGram:
+              '\$${formatPrice(headline.usdValue)} ${headline.unit}'.trim(),
+          usdPerOunce: _category == MarketCategory.currency
+              ? 'per unit'
+              : '\$${formatPrice(headline.usdValue * _gramsPerOunce)} / oz',
+          chartData: headline.trend,
+        ),
+        const SizedBox(height: 26),
+
+        _buildSectionHeader(
+          _category.sectionTitle,
+          'See all',
+          onAction: _openAllPrices,
+        ),
+        const SizedBox(height: 12),
+        _buildHorizontalList(items, currency, rate),
+        const SizedBox(height: 26),
+
+        _buildSectionHeader(
+          _category == MarketCategory.currency ? 'MARKET' : 'OUNCE',
+          '',
+        ),
+        const SizedBox(height: 12),
+        _buildStatsGrid(snapshot, currency, rate),
+        const SizedBox(height: 20),
+        _buildUpdatedFooter(snapshot),
+        const SizedBox(height: 28),
+      ],
+    );
+  }
+
   void _openAllPrices() {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => AllPricesScreen(category: _category),
       ),
+    );
+  }
+
+  // ───────────────────── Status banner ─────────────────────
+  Widget _buildStatusBanner(MarketState market) {
+    final isError = market.error != null;
+    final color = isError ? AppColors.negative : AppColors.textMuted;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.10),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3), width: 0.6),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isError ? Icons.error_outline : Icons.cloud_off_rounded,
+            size: 16,
+            color: color,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              market.error ?? 'Showing saved prices — you may be offline.',
+              style: TextStyle(fontSize: 12, color: color),
+            ),
+          ),
+          if (isError)
+            GestureDetector(
+              onTap: () =>
+                  context.read<MarketCubit>().load(forceRefresh: true),
+              child: const Text(
+                'Retry',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.gold,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String? error) {
+    return Column(
+      children: [
+        const Icon(Icons.wifi_off_rounded,
+            size: 42, color: AppColors.textMuted),
+        const SizedBox(height: 14),
+        Text(
+          error ?? 'Could not load prices.',
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: AppColors.textSecondary),
+        ),
+        const SizedBox(height: 18),
+        Center(
+          child: OutlinedButton(
+            onPressed: () =>
+                context.read<MarketCubit>().load(forceRefresh: true),
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: AppColors.divider),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+            ),
+            child: const Text('Try again',
+                style: TextStyle(color: AppColors.gold)),
+          ),
+        ),
+      ],
     );
   }
 
@@ -132,14 +257,12 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           child: const Center(
-            child: Text(
-              'G',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF3B2A08),
-              ),
-            ),
+            child: Text('G',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF3B2A08),
+                )),
           ),
         ),
         const SizedBox(width: 12),
@@ -176,8 +299,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         _circleIcon(Icons.notifications_none_rounded, () {}),
         const SizedBox(width: 10),
-
-        // ── Currency selector (tappable) ──
         GestureDetector(
           onTap: () => showCurrencySheet(context),
           behavior: HitTestBehavior.opaque,
@@ -272,7 +393,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ───────────────────── Section header ─────────────────────
   Widget _buildSectionHeader(String title, String action,
       {VoidCallback? onAction}) {
     return Row(
@@ -293,14 +413,12 @@ class _HomeScreenState extends State<HomeScreen> {
             behavior: HitTestBehavior.opaque,
             child: Row(
               children: [
-                Text(
-                  action,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.gold,
-                  ),
-                ),
+                Text(action,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.gold,
+                    )),
                 const Icon(Icons.chevron_right_rounded,
                     size: 18, color: AppColors.gold),
               ],
@@ -310,8 +428,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ─────────────────── Horizontal list ───────────────────
-  Widget _buildHorizontalList(List<PriceItem> items, AppCurrency currency) {
+  Widget _buildHorizontalList(
+    List<PriceItem> items,
+    AppCurrency currency,
+    double rate,
+  ) {
     return SizedBox(
       height: 176,
       child: ListView.separated(
@@ -323,8 +444,8 @@ class _HomeScreenState extends State<HomeScreen> {
           return KaratCard(
             karat: item.badge,
             title: item.label,
-            change: formatPercent(item.changePercent),
-            priceEgp: formatPrice(item.valueIn(currency.perUsd)),
+            change: formatPercentOrNull(item.changePercent),
+            priceEgp: formatPrice(item.valueIn(rate)),
             priceUsd: '\$${formatPrice(item.usdValue)}',
             isPositive: item.isPositive,
             chartData: item.trend,
@@ -334,80 +455,89 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ───────────────────── Stats grid (4 cards) ─────────────────────
-  Widget _buildStatsGrid(AppCurrency currency) {
-    final stats = _buildStats(currency);
+  // ───────────────── Stats grid ─────────────────
+  Widget _buildStatsGrid(
+    MarketSnapshot snapshot,
+    AppCurrency currency,
+    double rate,
+  ) {
+    final stats = _buildStats(snapshot, currency, rate);
+    if (stats.length < 4) return const SizedBox.shrink();
 
     return Column(
       children: [
-        Row(
-          children: [
-            Expanded(child: _statCard(stats[0])),
-            const SizedBox(width: 12),
-            Expanded(child: _statCard(stats[1])),
-          ],
-        ),
+        Row(children: [
+          Expanded(child: _statCard(stats[0])),
+          const SizedBox(width: 12),
+          Expanded(child: _statCard(stats[1])),
+        ]),
         const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(child: _statCard(stats[2])),
-            const SizedBox(width: 12),
-            Expanded(child: _statCard(stats[3])),
-          ],
-        ),
+        Row(children: [
+          Expanded(child: _statCard(stats[2])),
+          const SizedBox(width: 12),
+          Expanded(child: _statCard(stats[3])),
+        ]),
       ],
     );
   }
 
-  List<_Stat> _buildStats(AppCurrency currency) {
-    final rate = currency.perUsd;
-    final oz = DummyMarketData.gramsPerOunce;
-    final usd = DummyMarketData.currency.firstWhere((e) => e.id == 'USD');
+  PriceItem? _find(List<PriceItem> list, String id) {
+    for (final item in list) {
+      if (item.id == id) return item;
+    }
+    return null;
+  }
+
+  List<_Stat> _buildStats(
+    MarketSnapshot snap,
+    AppCurrency currency,
+    double rate,
+  ) {
+    final code = currency.code;
 
     switch (_category) {
       case MarketCategory.gold:
-        final k24 = DummyMarketData.gold.firstWhere((e) => e.id == '24');
-        final k21 = DummyMarketData.gold.firstWhere((e) => e.id == '21');
+        final k24 = _find(snap.gold, '24');
+        final k21 = _find(snap.gold, '21');
+        if (k24 == null || k21 == null) return const [];
         return [
-          _Stat('Gold Ounce', formatBig(k24.usdValue * oz * rate),
-              currency.code, '+0.9%'),
+          _Stat('Gold Ounce',
+              formatBig(k24.usdValue * _gramsPerOunce * rate), code),
           _Stat('Local Ounce · 24K',
-              formatBig(k24.usdValue * oz * rate * 1.004),
-              currency.code, '+0.9%'),
-          _Stat('Gold Pound · 21K', formatBig(k21.usdValue * 8 * rate),
-              currency.code, '+0.8%'),
-          _Stat('Dollar Rate', formatPrice(usd.usdValue * rate),
-              currency.code, '+0.1%'),
+              formatBig(k24.usdValue * _gramsPerOunce * rate * 1.004), code),
+          // The Egyptian gold pound is 8 grams of 21K.
+          _Stat('Gold Pound · 21K',
+              formatBig(k21.usdValue * 8 * rate), code),
+          _Stat('Dollar Rate', formatPrice(rate), code),
         ];
 
       case MarketCategory.silver:
-        final s999 = DummyMarketData.silver.firstWhere((e) => e.id == '999');
-        final s925 = DummyMarketData.silver.firstWhere((e) => e.id == '925');
+        final s999 = _find(snap.silver, '999');
+        final s925 = _find(snap.silver, '925');
+        if (s999 == null || s925 == null) return const [];
         return [
-          _Stat('Silver Ounce', formatBig(s999.usdValue * oz * rate),
-              currency.code, '+0.5%'),
+          _Stat('Silver Ounce',
+              formatBig(s999.usdValue * _gramsPerOunce * rate), code),
           _Stat('Local Ounce · 999',
-              formatBig(s999.usdValue * oz * rate * 1.004),
-              currency.code, '+0.5%'),
-          _Stat('Sterling · 100g', formatBig(s925.usdValue * 100 * rate),
-              currency.code, '+0.4%'),
-          _Stat('Dollar Rate', formatPrice(usd.usdValue * rate),
-              currency.code, '+0.1%'),
+              formatBig(s999.usdValue * _gramsPerOunce * rate * 1.004), code),
+          _Stat('Sterling · 100g',
+              formatBig(s925.usdValue * 100 * rate), code),
+          _Stat('Dollar Rate', formatPrice(rate), code),
         ];
 
       case MarketCategory.currency:
-        final eur = DummyMarketData.currency.firstWhere((e) => e.id == 'EUR');
-        final gbp = DummyMarketData.currency.firstWhere((e) => e.id == 'GBP');
-        final sar = DummyMarketData.currency.firstWhere((e) => e.id == 'SAR');
+        final usd = _find(snap.currency, 'USD');
+        final eur = _find(snap.currency, 'EUR');
+        final gbp = _find(snap.currency, 'GBP');
+        final sar = _find(snap.currency, 'SAR');
+        if (usd == null || eur == null || gbp == null || sar == null) {
+          return const [];
+        }
         return [
-          _Stat('US Dollar', formatPrice(usd.usdValue * rate),
-              currency.code, '+0.1%'),
-          _Stat('Euro', formatPrice(eur.usdValue * rate),
-              currency.code, '+0.2%'),
-          _Stat('British Pound', formatPrice(gbp.usdValue * rate),
-              currency.code, '+0.2%'),
-          _Stat('Saudi Riyal', formatPrice(sar.usdValue * rate),
-              currency.code, '+0.0%'),
+          _Stat('US Dollar', formatPrice(usd.valueIn(rate)), code),
+          _Stat('Euro', formatPrice(eur.valueIn(rate)), code),
+          _Stat('British Pound', formatPrice(gbp.valueIn(rate)), code),
+          _Stat('Saudi Riyal', formatPrice(sar.valueIn(rate)), code),
         ];
     }
   }
@@ -423,52 +553,33 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            stat.title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-                fontSize: 12, color: AppColors.textSecondary),
-          ),
+          Text(stat.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                  fontSize: 12, color: AppColors.textSecondary)),
           const SizedBox(height: 10),
-          Text(
-            stat.value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-            ),
-          ),
+          Text(stat.value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+              )),
           const SizedBox(height: 2),
-          Row(
-            children: [
-              Text(
-                stat.currencyCode,
-                style: const TextStyle(
-                    fontSize: 11, color: AppColors.textMuted),
-              ),
-              const Spacer(),
-              Text(
-                stat.change,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.positive,
-                ),
-              ),
-            ],
-          ),
+          Text(stat.currencyCode,
+              style: const TextStyle(
+                  fontSize: 11, color: AppColors.textMuted)),
         ],
       ),
     );
   }
 
-  Widget _buildUpdatedFooter() {
+  Widget _buildUpdatedFooter(MarketSnapshot snapshot) {
     return Center(
       child: Text(
-        'Last updated just now · prices are indicative',
+        'Updated ${formatAgo(snapshot.updatedAt)} · prices are indicative',
         style: TextStyle(
           fontSize: 11,
           color: AppColors.textMuted.withOpacity(0.9),
@@ -526,7 +637,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ──────────────────── Account sheet ────────────────────
   void _showAccountSheet() {
     final state = context.read<AuthBloc>().state;
     final user = state is AuthSuccess ? state.user : null;
@@ -585,14 +695,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          user?.greetingName ?? 'Guest',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
+                        Text(user?.greetingName ?? 'Guest',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            )),
                         const SizedBox(height: 2),
                         Text(
                           user == null || user.isGuest
@@ -656,12 +764,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-/// Small value object for the 4 stat cards.
 class _Stat {
   final String title;
   final String value;
   final String currencyCode;
-  final String change;
 
-  const _Stat(this.title, this.value, this.currencyCode, this.change);
+  const _Stat(this.title, this.value, this.currencyCode);
 }
