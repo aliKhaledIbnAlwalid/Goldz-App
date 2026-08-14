@@ -9,7 +9,6 @@ extension MarketCategoryX on MarketCategory {
         MarketCategory.currency => 'Currency',
       };
 
-  /// Section title used above the horizontal list.
   String get sectionTitle => switch (this) {
         MarketCategory.gold => 'KARATS',
         MarketCategory.silver => 'PURITIES',
@@ -18,13 +17,20 @@ extension MarketCategoryX on MarketCategory {
 }
 
 class PriceItem extends Equatable {
-  final String id;             // '21'
-  final String label;          // 'Karat 21'
-  final String badge;          // '21'  (shown in the small gold square)
-  final double usdValue;       // canonical value in USD
-  final String unit;           // '/ g', '/ oz', or ''
-  final double changePercent;  // 0.82
-  final List<double> trend;    // sparkline points
+  final String id;
+  final String label;
+  final String badge;
+
+  /// Canonical value in USD — converted to any currency at display time.
+  final double usdValue;
+
+  final String unit;
+
+  /// NULLABLE on purpose: null means "we don't have a change figure".
+  /// The UI shows "—" instead of inventing a number.
+  final double? changePercent;
+
+  final List<double> trend;
 
   const PriceItem({
     required this.id,
@@ -36,11 +42,12 @@ class PriceItem extends Equatable {
     required this.trend,
   });
 
-  bool get isPositive => changePercent >= 0;
+  bool get hasChange => changePercent != null;
+  bool get isPositive => (changePercent ?? 0) >= 0;
+  bool get hasTrend => trend.length >= 2;
 
-  /// Converts the canonical USD value into any currency.
   double valueIn(double perUsd) => usdValue * perUsd;
 
   @override
-  List<Object?> get props => [id, usdValue, changePercent];
+  List<Object?> get props => [id, usdValue, changePercent, trend];
 }

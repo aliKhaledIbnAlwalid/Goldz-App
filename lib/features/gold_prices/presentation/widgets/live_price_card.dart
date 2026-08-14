@@ -6,7 +6,7 @@ class LivePriceCard extends StatelessWidget {
   final String title;
   final String price;
   final String unit;
-  final String changePercent;
+  final String? changePercent;
   final bool isPositive;
   final String usdPerGram;
   final String usdPerOunce;
@@ -17,11 +17,23 @@ class LivePriceCard extends StatelessWidget {
     required this.title,
     required this.price,
     required this.unit,
-    required this.changePercent,
+    this.changePercent,
     required this.isPositive,
     required this.usdPerGram,
     required this.usdPerOunce,
-    this.chartData = const [3, 3.4, 3.2, 3.9, 3.6, 4.2, 3.9, 4.6, 4.3, 4.9, 5.2],
+    this.chartData = const [
+      3,
+      3.4,
+      3.2,
+      3.9,
+      3.6,
+      4.2,
+      3.9,
+      4.6,
+      4.3,
+      4.9,
+      5.2
+    ],
   });
 
   @override
@@ -122,18 +134,29 @@ class LivePriceCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: trendColor.withOpacity(0.12),
+              color: (changePercent == null ? AppColors.textMuted : trendColor)
+                  .withOpacity(0.12),
               borderRadius: BorderRadius.circular(9),
             ),
             child: Text(
-              '${isPositive ? '▲' : '▼'} $changePercent',
+              changePercent == null
+                  ? '— no change data yet'
+                  : '${isPositive ? '▲' : '▼'} $changePercent',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: trendColor,
+                color: changePercent == null ? AppColors.textMuted : trendColor,
               ),
             ),
           ),
+          if (chartData.length >= 2) ...[
+            SizedBox(
+              height: 72,
+              width: double.infinity,
+              child: Sparkline(data: chartData),
+            ),
+            const SizedBox(height: 16),
+          ],
           const SizedBox(height: 18),
 
           // ── Chart ──

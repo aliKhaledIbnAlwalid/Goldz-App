@@ -5,8 +5,9 @@ import '../../../../core/constants/app_currencies.dart';
 import '../../../../core/currency/currency_cubit.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/formatters.dart';
-import '../../data/dummy_market_data.dart';
 import '../../domain/entities/price_item.dart';
+import '../cubit/market_cubit.dart';
+import '../cubit/market_state.dart';
 import '../widgets/sparkline.dart';
 
 class AllPricesScreen extends StatelessWidget {
@@ -16,8 +17,6 @@ class AllPricesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final items = DummyMarketData.of(category);
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -52,12 +51,45 @@ class AllPricesScreen extends StatelessWidget {
       ),
       body: BlocBuilder<CurrencyCubit, AppCurrency>(
         builder: (context, currency) {
-          return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
-            itemCount: items.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
-            itemBuilder: (context, i) =>
-                _PriceRow(item: items[i], currency: currency),
+          return BlocBuilder<MarketCubit, MarketState>(
+            builder: (context, market) {
+              final snapshot = market.snapshot;
+
+              if (snapshot == null) {
+                return Center(
+                  child: market.isLoading
+                      ? const CircularProgressIndicator(
+                          color: AppColors.gold)
+                      : Text(
+                          market.error ?? 'No data available.',
+                          style: const TextStyle(
+                              color: AppColors.textSecondary),
+                        ),
+                );
+              }
+
+              final items = snapshot.of(category);
+              if (items.isEmpty) {
+                return const Center(
+                  child: Text('Nothing to show yet.',
+                      style: TextStyle(color: AppColors.textSecondary)),
+                );
+              }
+
+              final rate =
+                  snapshot.rateFor(currency.code, currency.perUsd);
+
+              return ListView.separated(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+                itemCount: items.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                itemBuilder: (context, i) => _PriceRow(
+                  item: items[i],
+                  currencyCode: currency.code,
+                  rate: rate,
+                ),
+              );
+            },
           );
         },
       ),
@@ -67,14 +99,20 @@ class AllPricesScreen extends StatelessWidget {
 
 class _PriceRow extends StatelessWidget {
   final PriceItem item;
-  final AppCurrency currency;
+  final String currencyCode;
+  final double rate;
 
-  const _PriceRow({required this.item, required this.currency});
+  const _PriceRow({
+    required this.item,
+    required this.currencyCode,
+    required this.rate,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final trendColor =
-        item.isPositive ? AppColors.positive : AppColors.negative;
+    final trendColor = !item.hasChange
+        ? AppColors.textMuted
+        : (item.isPositive ? AppColors.positive : AppColors.negative);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -85,7 +123,6 @@ class _PriceRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Badge
           Container(
             width: 44,
             height: 44,
@@ -107,23 +144,18 @@ class _PriceRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 14),
-
-          // Label + price
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  item.label,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
+                Text(item.label,
+                    style: const TextStyle(
+                        fontSize: 13, color: AppColors.textSecondary)),
                 const SizedBox(height: 3),
                 Text(
-                  '${formatPrice(item.valueIn(currency.perUsd))} '
-                  '${currency.code} ${item.unit}',
+                  '${formatPrice(item.valueIn(rate))} '
+                  '$currencyCode ${item.unit}'
+                      .trim(),
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
@@ -133,19 +165,18 @@ class _PriceRow extends StatelessWidget {
               ],
             ),
           ),
-
-          // Mini chart + change
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              SizedBox(
-                width: 62,
-                height: 26,
-                child: Sparkline(data: item.trend, color: trendColor),
-              ),
+              if (item.hasTrend)
+                SizedBox(
+                  width: 62,
+                  height: 26,
+                  child: Sparkline(data: item.trend, color: trendColor),
+                ),
               const SizedBox(height: 6),
               Text(
-                formatPercent(item.changePercent),
+                formatPercentOrNull(item.changePercent) ?? '—',
                 style: TextStyle(
                   fontSize: 11.5,
                   fontWeight: FontWeight.w700,
