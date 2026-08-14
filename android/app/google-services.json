@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "941552663384",
+    "project_id": "goldz-47739",
+    "storage_bucket": "goldz-47739.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:941552663384:android:8bee205067845473d9c32d",
+        "android_client_info": {
+          "package_name": "com.example.goldz"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "941552663384-a40i8qssrqttck770umi9n7hdkah0gda.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAxXfUEY3NMDaFqlOAQJdlbh59965YisRE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "941552663384-a40i8qssrqttck770umi9n7hdkah0gda.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "941552663384-aqb5lvr9b760msod2jr01go41pfc4qbb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.goldz"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
