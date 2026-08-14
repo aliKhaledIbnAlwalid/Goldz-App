@@ -25,7 +25,7 @@ lib/
 Flutter · Dart · BLoC · Dio · Hive · Firebase Auth · get_it · dartz
 
 ## Data Source
-Prices from the [XAUS API](https://xaus.com/api/). Indicative mid-market
+Prices from the [XAUS API](https://api.gold-api.com/price/XAU). Indicative mid-market
 rates — not tradable quotes.
 
 ## Getting Started
