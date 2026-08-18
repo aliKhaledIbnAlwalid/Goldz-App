@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:goldz/core/theme/app_palette.dart';
 import '../../../../core/constants/app_currencies.dart';
 import '../../../../core/currency/currency_cubit.dart';
-import '../../../../core/theme/app_colors.dart';
 
 Future<void> showCurrencySheet(BuildContext context) {
   return showModalBottomSheet(
     context: context,
-    backgroundColor: AppColors.card,
+    backgroundColor: context.c.surface,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
@@ -25,24 +25,24 @@ Future<void> showCurrencySheet(BuildContext context) {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.divider,
+                  color: context.c.divider,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
+            Text(
               'Display currency',
               style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: context.c.textPrimary,
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
+            Text(
               'Prices will be converted instantly',
-              style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+              style: TextStyle(fontSize: 12.5, color: context.c.textSecondary),
             ),
             const SizedBox(height: 18),
             ...AppCurrencies.supported.map((currency) {
@@ -59,12 +59,12 @@ Future<void> showCurrencySheet(BuildContext context) {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 14),
                     decoration: BoxDecoration(
-                      color: AppColors.cardLight,
+                      color: context.c.positiveSoft,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: isSelected
-                            ? AppColors.gold
-                            : AppColors.divider,
+                            ? context.c.brass
+                            : context.c.divider,
                         width: isSelected ? 1.2 : 0.6,
                       ),
                     ),
@@ -79,25 +79,25 @@ Future<void> showCurrencySheet(BuildContext context) {
                             children: [
                               Text(
                                 currency.code,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
+                                  color: context.c.textPrimary,
                                 ),
                               ),
                               Text(
                                 currency.name,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 12,
-                                  color: AppColors.textSecondary,
+                                  color:  context.c.textSecondary,
                                 ),
                               ),
                             ],
                           ),
                         ),
                         if (isSelected)
-                          const Icon(Icons.check_circle_rounded,
-                              color: AppColors.gold, size: 22),
+                          Icon(Icons.check_circle_rounded,
+                              color: context.c.brass, size: 22),
                       ],
                     ),
                   ),

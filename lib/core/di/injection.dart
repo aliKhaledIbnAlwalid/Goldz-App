@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
 import 'package:goldz/core/cashe/hive_boxes.dart';
+import 'package:goldz/core/settings/settings_cubit.dart';
 import 'package:goldz/features/gold_prices/data/repositories/market_repository.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../network/dio_client.dart';
@@ -68,4 +69,5 @@ Future<void> initDependencies() async {
   );
   sl.registerLazySingleton(() => GetMarketSnapshot(sl()));
   sl.registerFactory(() => MarketCubit(sl()));
+  sl.registerLazySingleton(() => SettingsCubit(sl()));
 }

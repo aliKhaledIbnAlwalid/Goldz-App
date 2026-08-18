@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
+import 'package:goldz/core/theme/app_palette.dart';
+import 'package:goldz/features/gold_prices/presentation/screens/calculator_screen.dart';
 import '../../../../core/constants/app_currencies.dart';
 import '../../../../core/currency/currency_cubit.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
@@ -30,7 +31,6 @@ class _HomeScreenState extends State<HomeScreen> {
   MarketCategory _category = MarketCategory.gold;
   int _navIndex = 0;
 
-
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
@@ -41,7 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.c.background,
         body: SafeArea(
           bottom: false,
           child: BlocBuilder<CurrencyCubit, AppCurrency>(
@@ -49,8 +49,8 @@ class _HomeScreenState extends State<HomeScreen> {
               return BlocBuilder<MarketCubit, MarketState>(
                 builder: (context, market) {
                   return RefreshIndicator(
-                    color: AppColors.gold,
-                    backgroundColor: AppColors.card,
+                    color: context.c.brass,
+                    backgroundColor: context.c.surface,
                     onRefresh: () =>
                         context.read<MarketCubit>().load(forceRefresh: true),
                     child: _buildBody(currency, market),
@@ -68,41 +68,38 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildBody(AppCurrency currency, MarketState market) {
     final snapshot = market.snapshot;
 
-    // First load, nothing cached yet.
     if (snapshot == null) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         children: [
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           _buildHeader(currency),
-          const SizedBox(height: 80),
+          const SizedBox(height: 90),
           if (market.isLoading)
-            const Center(
-              child: CircularProgressIndicator(color: AppColors.gold),
-            )
+            Center(
+                child: CircularProgressIndicator(color: context.c.brass))
           else
             _buildErrorState(market.error),
         ],
       );
     }
 
-    // Live conversion rate, falling back to the built-in value.
     final rate = snapshot.rateFor(currency.code, currency.perUsd);
-
     final items = snapshot.of(_category);
+
     if (items.isEmpty) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         children: [
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           _buildHeader(currency),
-          const SizedBox(height: 60),
+          const SizedBox(height: 70),
           Center(
             child: Text(
-              'No ${_category.label.toLowerCase()} data available right now.',
-              style: const TextStyle(color: AppColors.textSecondary),
+              'No ${_category.label.toLowerCase()} data available.',
+              style: AppText.label(14, color: context.c.brass),
             ),
           ),
         ],
@@ -113,50 +110,47 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       children: [
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         _buildHeader(currency),
         if (market.isStale || market.error != null) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           _buildStatusBanner(market),
         ],
-        const SizedBox(height: 20),
+        const SizedBox(height: 18),
         _buildTabs(),
         const SizedBox(height: 20),
-
         LivePriceCard(
-          title: '${_category.label} · ${headline.label}',
+          assetLabel: '${_category.label} · ${headline.label}',
           price: formatPrice(headline.valueIn(rate)),
-          unit: '${currency.code} ${headline.unit}'.trim(),
+          unit: _category == MarketCategory.currency
+              ? '${currency.code} per unit'
+              : '${currency.code} / Gram',
           changePercent: formatPercentOrNull(headline.changePercent),
           isPositive: headline.isPositive,
-          usdPerGram:
-              '\$${formatPrice(headline.usdValue)} ${headline.unit}'.trim(),
-          usdPerOunce: _category == MarketCategory.currency
-              ? 'per unit'
-              : '\$${formatPrice(headline.usdValue * _gramsPerOunce)} / oz',
+          usdLabel: '~ \$${formatPrice(headline.usdValue)} USD',
           chartData: headline.trend,
+          onViewDetails: _openAllPrices,
         ),
+        const SizedBox(height: 28),
+        Text(
+          _category == MarketCategory.currency
+              ? 'Other Rates'
+              : 'Other ${_category == MarketCategory.gold ? 'Karats' : 'Purities'}',
+          style: AppText.heading(21, color: context.c.textPrimary),
+        ),
+        const SizedBox(height: 14),
+        _buildHorizontalList(items, currency.code, rate),
         const SizedBox(height: 26),
-
-        _buildSectionHeader(
-          _category.sectionTitle,
-          'See all',
-          onAction: _openAllPrices,
-        ),
-        const SizedBox(height: 12),
-        _buildHorizontalList(items, currency, rate),
-        const SizedBox(height: 26),
-
-        _buildSectionHeader(
-          _category == MarketCategory.currency ? 'MARKET' : 'OUNCE',
-          '',
-        ),
-        const SizedBox(height: 12),
         _buildStatsGrid(snapshot, currency, rate),
-        const SizedBox(height: 20),
-        _buildUpdatedFooter(snapshot),
+        const SizedBox(height: 22),
+        Center(
+          child: Text(
+            'Updated ${formatAgo(snapshot.updatedAt)} · prices are indicative',
+            style: AppText.label(11, color: context.c.textMuted),
+          ),
+        ),
         const SizedBox(height: 28),
       ],
     );
@@ -170,190 +164,96 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ───────────────────── Status banner ─────────────────────
-  Widget _buildStatusBanner(MarketState market) {
-    final isError = market.error != null;
-    final color = isError ? AppColors.negative : AppColors.textMuted;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.10),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3), width: 0.6),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            isError ? Icons.error_outline : Icons.cloud_off_rounded,
-            size: 16,
-            color: color,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              market.error ?? 'Showing saved prices — you may be offline.',
-              style: TextStyle(fontSize: 12, color: color),
-            ),
-          ),
-          if (isError)
-            GestureDetector(
-              onTap: () =>
-                  context.read<MarketCubit>().load(forceRefresh: true),
-              child: const Text(
-                'Retry',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.gold,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildErrorState(String? error) {
-    return Column(
-      children: [
-        const Icon(Icons.wifi_off_rounded,
-            size: 42, color: AppColors.textMuted),
-        const SizedBox(height: 14),
-        Text(
-          error ?? 'Could not load prices.',
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: AppColors.textSecondary),
-        ),
-        const SizedBox(height: 18),
-        Center(
-          child: OutlinedButton(
-            onPressed: () =>
-                context.read<MarketCubit>().load(forceRefresh: true),
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: AppColors.divider),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
-            ),
-            child: const Text('Try again',
-                style: TextStyle(color: AppColors.gold)),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ───────────────────────── Header ─────────────────────────
+  // ───────────────── Header ─────────────────
   Widget _buildHeader(AppCurrency currency) {
     return Row(
       children: [
         Container(
-          width: 44,
-          height: 44,
+          width: 42,
+          height: 42,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            gradient: const LinearGradient(
-              colors: [AppColors.goldSoft, AppColors.goldDark],
-            ),
+            color: context.c.brass,
+            borderRadius: BorderRadius.circular(12),
           ),
-          child: const Center(
-            child: Text('G',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF3B2A08),
-                )),
+          child: Center(
+            child: Text('G', style: AppText.heading(22, color: Colors.white)),
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: BlocBuilder<AuthBloc, AuthState>(
             builder: (context, state) {
-              final name =
-                  state is AuthSuccess ? state.user.greetingName : '';
+              final name = state is AuthSuccess ? state.user.greetingName : '';
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text('LIVE MARKET', style: AppText.micro(9.5, color: context.c.textMuted)),
+                  const SizedBox(height: 2),
                   Text(
                     name.isEmpty ? 'Goldz' : 'Hi, $name',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const Text(
-                    'LIVE MARKET',
-                    style: TextStyle(
-                      fontSize: 10,
-                      letterSpacing: 1.6,
-                      color: AppColors.textMuted,
-                    ),
+                    style: AppText.heading(19, color: context.c.textPrimary),
                   ),
                 ],
               );
             },
           ),
         ),
-        _circleIcon(Icons.notifications_none_rounded, () {}),
-        const SizedBox(width: 10),
         GestureDetector(
           onTap: () => showCurrencySheet(context),
           behavior: HitTestBehavior.opaque,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: AppColors.chipBackground,
-              borderRadius: BorderRadius.circular(20),
+              color: context.c.surfaceAlt,
+              borderRadius: BorderRadius.circular(18),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(currency.flag, style: const TextStyle(fontSize: 13)),
-                const SizedBox(width: 6),
-                Text(
-                  currency.code,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(width: 3),
-                const Icon(Icons.keyboard_arrow_down_rounded,
-                    size: 16, color: AppColors.textSecondary),
+                Text(currency.code,
+                    style: AppText.label(12,
+                        color: context.c.textPrimary, weight: FontWeight.w700)),
+                const SizedBox(width: 2),
+                 Icon(Icons.keyboard_arrow_down_rounded,
+                    size: 15, color: context.c.textSecondary),
               ],
             ),
           ),
+        ),
+        const SizedBox(width: 10),
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+             Icon(Icons.notifications_none_rounded,
+                size: 24, color: context.c.textPrimary),
+            Positioned(
+              right: 0,
+              top: 0,
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: context.c.live,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: context.c.background, width: 1.5),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _circleIcon(IconData icon, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: const BoxDecoration(
-          color: AppColors.chipBackground,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(icon, size: 20, color: AppColors.textPrimary),
-      ),
-    );
-  }
-
-  // ───────────────────────── Tabs ─────────────────────────
+  // ───────────────── Tabs ─────────────────
   Widget _buildTabs() {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(16),
+        color: context.c.surfaceAlt,
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         children: MarketCategory.values.map((category) {
@@ -363,26 +263,29 @@ class _HomeScreenState extends State<HomeScreen> {
               onTap: () => setState(() => _category = category),
               behavior: HitTestBehavior.opaque,
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOut,
+                duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(vertical: 11),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  gradient: selected
-                      ? const LinearGradient(
-                          colors: [AppColors.goldSoft, AppColors.gold])
+                  color: selected ? context.c.surface : Colors.transparent,
+                  borderRadius: BorderRadius.circular(11),
+                  boxShadow: selected
+                      ?  [
+                          BoxShadow(
+                            color: context.c.cardShadow,
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          )
+                        ]
                       : null,
                 ),
                 child: Text(
                   category.label,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight:
-                        selected ? FontWeight.w700 : FontWeight.w500,
-                    color: selected
-                        ? const Color(0xFF3B2A08)
-                        : AppColors.textSecondary,
+                  style: AppText.label(
+                    13.5,
+                    color:
+                        selected ? context.c.textPrimary : context.c.textSecondary,
+                    weight: selected ? FontWeight.w700 : FontWeight.w500,
                   ),
                 ),
               ),
@@ -393,48 +296,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title, String action,
-      {VoidCallback? onAction}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 12.5,
-            letterSpacing: 1.3,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        if (action.isNotEmpty)
-          GestureDetector(
-            onTap: onAction,
-            behavior: HitTestBehavior.opaque,
-            child: Row(
-              children: [
-                Text(action,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.gold,
-                    )),
-                const Icon(Icons.chevron_right_rounded,
-                    size: 18, color: AppColors.gold),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildHorizontalList(
-    List<PriceItem> items,
-    AppCurrency currency,
-    double rate,
-  ) {
+  Widget _buildHorizontalList(List<PriceItem> items, String code, double rate) {
     return SizedBox(
-      height: 176,
+      height: 168,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: items.length,
@@ -442,11 +306,12 @@ class _HomeScreenState extends State<HomeScreen> {
         itemBuilder: (context, i) {
           final item = items[i];
           return KaratCard(
-            karat: item.badge,
-            title: item.label,
+            badge: _category == MarketCategory.currency
+                ? item.id
+                : '${item.badge}K',
+            price: formatPrice(item.valueIn(rate)),
+            currencyCode: code,
             change: formatPercentOrNull(item.changePercent),
-            priceEgp: formatPrice(item.valueIn(rate)),
-            priceUsd: '\$${formatPrice(item.usdValue)}',
             isPositive: item.isPositive,
             chartData: item.trend,
           );
@@ -457,10 +322,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ───────────────── Stats grid ─────────────────
   Widget _buildStatsGrid(
-    MarketSnapshot snapshot,
-    AppCurrency currency,
-    double rate,
-  ) {
+      MarketSnapshot snapshot, AppCurrency currency, double rate) {
     final stats = _buildStats(snapshot, currency, rate);
     if (stats.length < 4) return const SizedBox.shrink();
 
@@ -489,10 +351,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   List<_Stat> _buildStats(
-    MarketSnapshot snap,
-    AppCurrency currency,
-    double rate,
-  ) {
+      MarketSnapshot snap, AppCurrency currency, double rate) {
     final code = currency.code;
 
     switch (_category) {
@@ -501,14 +360,13 @@ class _HomeScreenState extends State<HomeScreen> {
         final k21 = _find(snap.gold, '21');
         if (k24 == null || k21 == null) return const [];
         return [
-          _Stat('Gold Ounce',
-              formatBig(k24.usdValue * _gramsPerOunce * rate), code),
-          _Stat('Local Ounce · 24K',
-              formatBig(k24.usdValue * _gramsPerOunce * rate * 1.004), code),
-          // The Egyptian gold pound is 8 grams of 21K.
-          _Stat('Gold Pound · 21K',
-              formatBig(k21.usdValue * 8 * rate), code),
-          _Stat('Dollar Rate', formatPrice(rate), code),
+          _Stat('Global Ounce', '\$${formatBig(k24.usdValue * _gramsPerOunce)}',
+              'USD'),
+          _Stat('Local Ounce', formatBig(k24.usdValue * _gramsPerOunce * rate),
+              code),
+          // Egyptian gold pound = 8 grams of 21K
+          _Stat('Gold Pound', formatBig(k21.usdValue * 8 * rate), code),
+          _Stat('USD Rate', formatPrice(rate), code),
         ];
 
       case MarketCategory.silver:
@@ -516,13 +374,12 @@ class _HomeScreenState extends State<HomeScreen> {
         final s925 = _find(snap.silver, '925');
         if (s999 == null || s925 == null) return const [];
         return [
-          _Stat('Silver Ounce',
-              formatBig(s999.usdValue * _gramsPerOunce * rate), code),
-          _Stat('Local Ounce · 999',
-              formatBig(s999.usdValue * _gramsPerOunce * rate * 1.004), code),
-          _Stat('Sterling · 100g',
-              formatBig(s925.usdValue * 100 * rate), code),
-          _Stat('Dollar Rate', formatPrice(rate), code),
+          _Stat('Global Ounce',
+              '\$${formatPrice(s999.usdValue * _gramsPerOunce)}', 'USD'),
+          _Stat('Local Ounce', formatBig(s999.usdValue * _gramsPerOunce * rate),
+              code),
+          _Stat('Sterling 100g', formatBig(s925.usdValue * 100 * rate), code),
+          _Stat('USD Rate', formatPrice(rate), code),
         ];
 
       case MarketCategory.currency:
@@ -544,11 +401,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _statCard(_Stat stat) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.divider, width: 0.6),
+        color: context.c.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.c.border, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -556,80 +413,140 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(stat.title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                  fontSize: 12, color: AppColors.textSecondary)),
-          const SizedBox(height: 10),
+              style: AppText.label(12,
+                  color: context.c.brass, weight: FontWeight.w600)),
+          const SizedBox(height: 9),
           Text(stat.value,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-              )),
-          const SizedBox(height: 2),
-          Text(stat.currencyCode,
-              style: const TextStyle(
-                  fontSize: 11, color: AppColors.textMuted)),
+              style: AppText.price(19, color: context.c.textPrimary)),
+          const SizedBox(height: 3),
+          Text(stat.currencyCode, style: AppText.label(11, color: context.c.textSecondary)),
         ],
       ),
     );
   }
 
-  Widget _buildUpdatedFooter(MarketSnapshot snapshot) {
-    return Center(
-      child: Text(
-        'Updated ${formatAgo(snapshot.updatedAt)} · prices are indicative',
-        style: TextStyle(
-          fontSize: 11,
-          color: AppColors.textMuted.withOpacity(0.9),
-        ),
+  // ───────────────── Status / error ─────────────────
+  Widget _buildStatusBanner(MarketState market) {
+    final isError = market.error != null;
+    final color = isError ? context.c.negative : context.c.textSecondary;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      decoration: BoxDecoration(
+        color: isError ? context.c.negativeSoft : context.c.surfaceAlt,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(isError ? Icons.error_outline : Icons.cloud_off_rounded,
+              size: 16, color: color),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              market.error ?? 'Showing saved prices — you may be offline',
+              style: AppText.label(12, color: color),
+            ),
+          ),
+          if (isError)
+            GestureDetector(
+              onTap: () => context.read<MarketCubit>().load(forceRefresh: true),
+              child: Text('Retry',
+                  style: AppText.label(12,
+                      color: context.c.brass, weight: FontWeight.w700)),
+            ),
+        ],
       ),
     );
   }
 
-  // ─────────────────────── Bottom nav ───────────────────────
+  Widget _buildErrorState(String? error) {
+    return Column(
+      children: [
+        Container(
+          width: 84,
+          height: 84,
+          decoration:  BoxDecoration(
+            color: context.c.surfaceAlt,
+            shape: BoxShape.circle,
+          ),
+          child:  Icon(Icons.wifi_off_rounded,
+              size: 34, color: context.c.textMuted),
+        ),
+        const SizedBox(height: 20),
+        Text('Could not load prices',
+            textAlign: TextAlign.center, style: AppText.heading(20, color: context.c.textPrimary)),
+        const SizedBox(height: 8),
+        Text(
+          error ??
+              'Please check your internet connection. We need to be online to fetch the latest market data.',
+          textAlign: TextAlign.center,
+          style: AppText.label(13, color: context.c.textSecondary),
+        ),
+        const SizedBox(height: 22),
+        Center(
+          child: OutlinedButton.icon(
+            onPressed: () =>
+                context.read<MarketCubit>().load(forceRefresh: true),
+            icon:  Icon(Icons.refresh_rounded,
+                size: 17, color: context.c.brass),
+            label: Text('TRY AGAIN',
+                style: AppText.micro(11.5, color: context.c.brass)),
+            style: OutlinedButton.styleFrom(
+              side:  BorderSide(color: context.c.brass),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30)),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ───────────────── Bottom nav ─────────────────
   Widget _buildBottomNav() {
     const items = [
-      (Icons.home_rounded, 'Home'),
+      (Icons.trending_up_rounded, 'Market'),
+      (Icons.list_alt_rounded, 'All Prices'),
       (Icons.calculate_outlined, 'Calculator'),
-      (Icons.show_chart_rounded, 'Charts'),
-      (Icons.notifications_none_rounded, 'Alerts'),
       (Icons.settings_outlined, 'Settings'),
     ];
 
     return Container(
-      padding: const EdgeInsets.only(top: 10, bottom: 22),
-      decoration: const BoxDecoration(
-        color: AppColors.card,
-        border:
-            Border(top: BorderSide(color: AppColors.divider, width: 0.6)),
+      padding: const EdgeInsets.only(top: 10, bottom: 24),
+      decoration:  BoxDecoration(
+        color: context.c.surface,
+        border: Border(top: BorderSide(color: context.c.divider, width: 1)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: List.generate(items.length, (i) {
           final selected = i == _navIndex;
-          final color = selected ? AppColors.gold : AppColors.textMuted;
-          return GestureDetector(
+          return GestureDetector(                 
             behavior: HitTestBehavior.opaque,
-            onTap: () {
-              if (i == 4) {
-                _showAccountSheet();
-              } else {
-                setState(() => _navIndex = i);
-              }
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(items[i].$1, size: 23, color: color),
-                  const SizedBox(height: 4),
-                  Text(items[i].$2,
-                      style: TextStyle(fontSize: 10, color: color)),
-                ],
-              ),
+            onTap: () => _onNavTap(i),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: selected ? context.c.brass : Colors.transparent,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Icon(items[i].$1,
+                      size: 21,
+                      color: selected ? Colors.white : context.c.textMuted),
+                ),
+                const SizedBox(height: 4),
+                Text(items[i].$2,
+                    style: AppText.label(10.5,
+                        color: selected ? context.c.brass : context.c.textMuted,
+                        weight: selected ? FontWeight.w600 : FontWeight.w500)),
+              ],
             ),
           );
         }),
@@ -637,122 +554,116 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _onNavTap(int i) {
+    switch (i) {
+      case 0:
+        setState(() => _navIndex = 0);
+      case 1:
+        _openAllPrices();
+      case 2:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const CalculatorScreen()),
+        );
+      case 3:
+        _showAccountSheet();
+    }
+  }
+
+  // ───────────────── Account sheet ─────────────────
   void _showAccountSheet() {
     final state = context.read<AuthBloc>().state;
     final user = state is AuthSuccess ? state.user : null;
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.card,
+      backgroundColor: context.c.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
       ),
       builder: (sheetContext) {
         return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+          padding: const EdgeInsets.fromLTRB(0, 14, 0, 28),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.divider,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: context.c.border,
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              const SizedBox(height: 22),
-              Row(
-                children: [
-                  Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      gradient: const LinearGradient(
-                        colors: [AppColors.goldSoft, AppColors.goldDark],
+              const SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: context.c.brass,
+                        borderRadius: BorderRadius.circular(14),
                       ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        (user?.greetingName ?? 'G')
-                            .characters
-                            .first
-                            .toUpperCase(),
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF3B2A08),
+                      child: Center(
+                        child: Text(
+                          (user?.greetingName ?? 'G')
+                              .characters
+                              .first
+                              .toUpperCase(),
+                          style: AppText.heading(20, color: Colors.white),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(user?.greetingName ?? 'Guest',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                            )),
-                        const SizedBox(height: 2),
-                        Text(
-                          user == null || user.isGuest
-                              ? 'Guest session'
-                              : user.email,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12.5,
-                            color: AppColors.textSecondary,
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(user?.greetingName ?? 'Guest',
+                              style: AppText.heading(17, color: context.c.textPrimary)),
+                          const SizedBox(height: 2),
+                          Text(
+                            user == null || user.isGuest
+                                ? 'Guest session'
+                                : user.email,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppText.label(12.5, color: context.c.textSecondary),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              if (user?.isGuest ?? false) ...[
-                OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(sheetContext);
-                    Navigator.of(context).pushNamed('/register');
-                  },
-                  icon: const Icon(Icons.person_add_alt_1_outlined,
-                      size: 19, color: AppColors.gold),
-                  label: const Text('Create an account',
-                      style: TextStyle(color: AppColors.gold)),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    side: const BorderSide(color: AppColors.divider),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
+                  ],
                 ),
-                const SizedBox(height: 10),
-              ],
-              OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.pop(sheetContext);
-                  context.read<AuthBloc>().add(const SignOutRequested());
-                },
-                icon: const Icon(Icons.logout_rounded,
-                    size: 19, color: AppColors.negative),
-                label: const Text('Sign out',
-                    style: TextStyle(color: AppColors.negative)),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  side: const BorderSide(color: AppColors.divider),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+              ),
+              const SizedBox(height: 18),
+              _sheetRow(Icons.language_rounded, 'Language', 'English'),
+              _sheetRow(Icons.contrast_rounded, 'Theme', 'Light'),
+              _sheetRow(
+                  Icons.notifications_active_outlined, 'Price alerts', ''),
+              _sheetRow(Icons.star_outline_rounded, 'Rate the app', ''),
+              const SizedBox(height: 18),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(sheetContext);
+                      context.read<AuthBloc>().add(const SignOutRequested());
+                    },
+                    icon:  Icon(Icons.logout_rounded,
+                        size: 17, color: context.c.negative),
+                    label: Text('SIGN OUT',
+                        style: AppText.micro(11.5, color: context.c.negative)),
+                    style: OutlinedButton.styleFrom(
+                      side:  BorderSide(color: context.c.negative),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30)),
+                    ),
                   ),
                 ),
               ),
@@ -762,12 +673,35 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
   }
+
+  Widget _sheetRow(IconData icon, String title, String trailing) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          child: Row(
+            children: [
+              Icon(icon, size: 19, color: context.c.textPrimary ),
+              const SizedBox(width: 14),
+              Expanded(
+                  child: Text(title,
+                      style: AppText.label(14, color: context.c.textPrimary))),
+              if (trailing.isNotEmpty) Text(trailing, style: AppText.label(13, color: context.c.textMuted)),
+              const SizedBox(width: 6),
+               Icon(Icons.chevron_right_rounded,
+                  size: 18, color: context.c.textMuted),
+            ],
+          ),
+        ),
+         Divider(height: 1, color: context.c.divider, indent: 20),
+      ],
+    );
+  }
 }
 
 class _Stat {
   final String title;
   final String value;
   final String currencyCode;
-
   const _Stat(this.title, this.value, this.currencyCode);
 }

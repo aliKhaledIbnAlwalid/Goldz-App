@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:goldz/core/theme/app_palette.dart';
 import 'package:goldz/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:goldz/features/auth/presentation/bloc/auth_event.dart';
 import 'package:goldz/features/auth/presentation/bloc/auth_state.dart';
 import 'package:goldz/features/auth/presentation/screens/register_screen.dart';
 import 'package:goldz/widgets/gold_button.dart';
-import '../../../../core/theme/app_colors.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -41,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.c.background,
       body: SafeArea(
         child: BlocConsumer<AuthBloc, AuthState>(
           listener: (context, state) {
@@ -49,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.message),
-                  backgroundColor: AppColors.negative,
+                  backgroundColor: context.c.negative,
                   behavior: SnackBarBehavior.floating,
                 ),
               );
@@ -76,14 +76,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         height: 84,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(24),
-                          gradient: const LinearGradient(
+                          gradient: LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: [AppColors.goldSoft, AppColors.goldDark],
+                            colors: [context.c.brassLight, context.c.brass],
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.gold.withOpacity(0.35),
+                              color: context.c.brass.withOpacity(0.35),
                               blurRadius: 30,
                               offset: const Offset(0, 10),
                             ),
@@ -103,22 +103,22 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 28),
 
-                    const Text(
+                    Text(
                       'Welcome back',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                        color: context.c.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       'Live gold prices in Egypt — sign in to continue',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppColors.textSecondary,
+                        color: context.c.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 36),
@@ -128,7 +128,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
-                      style: const TextStyle(color: AppColors.textPrimary),
+                      style: TextStyle(color: context.c.textPrimary),
                       decoration: const InputDecoration(
                         labelText: 'Email',
                         prefixIcon: Icon(Icons.alternate_email, size: 20),
@@ -151,7 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       obscureText: _obscurePassword,
                       textInputAction: TextInputAction.done,
                       onFieldSubmitted: (_) => _submit(),
-                      style: const TextStyle(color: AppColors.textPrimary),
+                      style: TextStyle(color: context.c.textPrimary),
                       decoration: InputDecoration(
                         labelText: 'Password',
                         prefixIcon: const Icon(Icons.lock_outline, size: 20),
@@ -184,19 +184,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 24),
 
                     Row(
-                      children: const [
-                        Expanded(child: Divider(color: AppColors.divider)),
+                      children: [
+                        Expanded(child: Divider(color: context.c.divider)),
                         Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 14),
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
                           child: Text(
                             'or',
                             style: TextStyle(
                               fontSize: 12,
-                              color: AppColors.textMuted,
+                              color:  context.c.textMuted,
                             ),
                           ),
                         ),
-                        Expanded(child: Divider(color: AppColors.divider)),
+                        Expanded(child: Divider(color: context.c.divider)),
                       ],
                     ),
                     const SizedBox(height: 24),
@@ -208,19 +208,19 @@ class _LoginScreenState extends State<LoginScreen> {
                           : () => context
                               .read<AuthBloc>()
                               .add(const GuestSignInRequested()),
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.person_outline_rounded,
                         size: 20,
-                        color: AppColors.textPrimary,
+                        color: context.c.textPrimary,
                       ),
-                      label: const Text(
+                      label: Text(
                         'Continue as Guest',
-                        style: TextStyle(color: AppColors.textPrimary),
+                        style: TextStyle(color:context.c.textPrimary),
                       ),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: const BorderSide(color: AppColors.divider),
-                        backgroundColor: AppColors.card,
+                        side: BorderSide(color: context.c.divider),
+                        backgroundColor: context.c.surface,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -231,9 +231,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
+                        Text(
                           "Don't have an account?",
-                          style: TextStyle(color: AppColors.textSecondary),
+                          style: TextStyle(color: context.c.textSecondary),
                         ),
                         TextButton(
                           onPressed: () => Navigator.of(context).push(
@@ -241,10 +241,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               builder: (_) => const RegisterScreen(),
                             ),
                           ),
-                          child: const Text(
+                          child: Text(
                             'Sign Up',
                             style: TextStyle(
-                              color: AppColors.gold,
+                              color: context.c.brass,
                               fontWeight: FontWeight.w600,
                             ),
                           ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:goldz/core/theme/app_colors.dart';
+import 'package:goldz/core/theme/app_palette.dart';
 
 class GoldButton extends StatelessWidget {
   final String label;
@@ -18,8 +18,8 @@ class GoldButton extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        gradient: const LinearGradient(
-          colors: [AppColors.goldSoft, AppColors.gold, AppColors.goldDark],
+        gradient: LinearGradient(
+          colors: [context.c.brassLight, context.c.brass, context.c.brass],
         ),
       ),
       child: ElevatedButton(

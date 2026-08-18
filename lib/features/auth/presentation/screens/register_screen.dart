@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:goldz/core/theme/app_palette.dart';
 import 'package:goldz/widgets/gold_button.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -45,11 +45,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.c.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        iconTheme:  IconThemeData(color: context.c.textPrimary),
       ),
       body: SafeArea(
         child: BlocConsumer<AuthBloc, AuthState>(
@@ -58,7 +58,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.message),
-                  backgroundColor: AppColors.negative,
+                  backgroundColor: context.c.negative,
                   behavior: SnackBarBehavior.floating,
                 ),
               );
@@ -77,20 +77,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       'Create your account',
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                        color: context.c.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       'Track gold prices and save your favorites',
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppColors.textSecondary,
+                        color: context.c.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -100,7 +100,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       controller: _nameController,
                       textCapitalization: TextCapitalization.words,
                       textInputAction: TextInputAction.next,
-                      style: const TextStyle(color: AppColors.textPrimary),
+                      style: TextStyle(color: context.c.textPrimary),
                       decoration: const InputDecoration(
                         labelText: 'Full name',
                         prefixIcon: Icon(Icons.person_outline, size: 20),
@@ -122,7 +122,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
-                      style: const TextStyle(color: AppColors.textPrimary),
+                      style: TextStyle(color: context.c.textPrimary),
                       decoration: const InputDecoration(
                         labelText: 'Email',
                         prefixIcon: Icon(Icons.alternate_email, size: 20),
@@ -144,7 +144,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       controller: _passwordController,
                       obscureText: _obscurePassword,
                       textInputAction: TextInputAction.next,
-                      style: const TextStyle(color: AppColors.textPrimary),
+                      style:  TextStyle(color: context.c.textPrimary),
                       decoration: InputDecoration(
                         labelText: 'Password',
                         prefixIcon: const Icon(Icons.lock_outline, size: 20),
@@ -175,7 +175,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       obscureText: _obscurePassword,
                       textInputAction: TextInputAction.done,
                       onFieldSubmitted: (_) => _submit(),
-                      style: const TextStyle(color: AppColors.textPrimary),
+                      style: TextStyle(color: context.c.textPrimary),
                       decoration: const InputDecoration(
                         labelText: 'Confirm password',
                         prefixIcon: Icon(Icons.lock_outline, size: 20),
