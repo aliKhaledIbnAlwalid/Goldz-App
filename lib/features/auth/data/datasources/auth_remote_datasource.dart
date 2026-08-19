@@ -16,8 +16,9 @@ abstract class AuthRemoteDataSource {
   Future<UserModel> signInAsGuest();
 
   Future<void> signOut();
+  Future<void> sendPasswordReset(String email);
 
-  UserModel? getCurrentUser();
+  Future<UserModel?> getCurrentUser();
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -48,6 +49,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
+  Future<void> sendPasswordReset(String email) async {
+    await firebaseAuth.sendPasswordResetEmail(email: email.trim());
+  }
+
+  @override
   Future<UserModel> signIn({
     required String email,
     required String password,
@@ -71,9 +77,27 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  UserModel? getCurrentUser() {
+  Future<UserModel?> getCurrentUser() async {
     final user = firebaseAuth.currentUser;
     if (user == null) return null;
-    return UserModel.fromFirebase(user);
+
+    try {
+      // Asks the server: does this account still exist and is it enabled?
+      await user.reload();
+      final refreshed = firebaseAuth.currentUser;
+      if (refreshed == null) return null;
+      return UserModel.fromFirebase(refreshed);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found' ||
+          e.code == 'user-disabled' ||
+          e.code == 'user-token-expired') {
+        await firebaseAuth.signOut();
+        return null;
+      }
+      // Offline — trust the cached session rather than locking them out.
+      return UserModel.fromFirebase(user);
+    } catch (_) {
+      return UserModel.fromFirebase(user);
+    }
   }
 }

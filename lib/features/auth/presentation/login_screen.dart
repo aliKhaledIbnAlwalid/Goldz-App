@@ -3,9 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goldz/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:goldz/features/auth/presentation/bloc/auth_event.dart';
 import 'package:goldz/features/auth/presentation/bloc/auth_state.dart';
+import 'package:goldz/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:goldz/features/auth/presentation/screens/register_screen.dart';
 import 'package:goldz/widgets/gold_button.dart';
-
 import '../../../../core/theme/app_palette.dart';
 import '../../../../core/theme/app_text.dart';
 import '../../../../core/utils/context_ext.dart';
@@ -141,10 +141,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                     color: c.brass,
                                     weight: FontWeight.w600)),
                             const Spacer(),
-                            Text(l.forgotPassword,
-                                style: AppText.label(12.5,
-                                    color: c.brass,
-                                    weight: FontWeight.w600)),
+                                                        GestureDetector(
+                              onTap: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      const ForgotPasswordScreen(),
+                                ),
+                              ),
+                              child: Text(l.forgotPassword,
+                                  style: AppText.label(12.5,
+                                      color: c.brass,
+                                      weight: FontWeight.w600)),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 8),

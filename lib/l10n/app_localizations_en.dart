@@ -354,4 +354,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pricesUnavailable => 'Prices unavailable — try again later.';
+
+  @override
+  String get resetPassword => 'Reset password';
+
+  @override
+  String get resetPasswordTitle => 'Forgot your password?';
+
+  @override
+  String get resetPasswordSubtitle =>
+      'Enter your email and we\'ll send you a link to reset it.';
+
+  @override
+  String get sendResetLink => 'Send reset link';
+
+  @override
+  String get checkYourInbox => 'Check your inbox';
+
+  @override
+  String get resetEmailSentBody =>
+      'If an account exists for that email, we\'ve sent a reset link. Check your spam folder too.';
+
+  @override
+  String get backToLogin => 'Back to sign in';
 }

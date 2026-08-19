@@ -117,5 +117,12 @@
   "silverLabel": "فضة {p}",
   "noDataFor": "لا توجد بيانات {category}.",
   "nothingToShow": "لا يوجد ما يُعرض بعد.",
-  "pricesUnavailable": "الأسعار غير متاحة — حاول لاحقاً."
+  "pricesUnavailable": "الأسعار غير متاحة — حاول لاحقاً.",
+    "resetPassword": "إعادة تعيين كلمة المرور",
+  "resetPasswordTitle": "نسيت كلمة المرور؟",
+  "resetPasswordSubtitle": "أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة التعيين.",
+  "sendResetLink": "إرسال الرابط",
+  "checkYourInbox": "تحقّق من بريدك",
+  "resetEmailSentBody": "إذا كان هناك حساب بهذا البريد، فقد أرسلنا رابط إعادة التعيين. تحقّق من مجلد الرسائل غير المرغوبة أيضاً.",
+  "backToLogin": "العودة لتسجيل الدخول"
 }

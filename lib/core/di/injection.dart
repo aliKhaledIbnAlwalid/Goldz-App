@@ -3,8 +3,13 @@ import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
 import 'package:goldz/core/cashe/hive_boxes.dart';
+import 'package:goldz/core/notifications/notification_prefs.dart';
+import 'package:goldz/core/notifications/notification_service.dart';
 import 'package:goldz/core/settings/settings_cubit.dart';
+import 'package:goldz/features/auth/domain/usecases/send_password_reset_usecase.dart';
 import 'package:goldz/features/gold_prices/data/repositories/market_repository.dart';
+import 'package:goldz/features/news/data/news_repository.dart';
+import 'package:goldz/features/news/presentation/cubit/news_cubit.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../network/dio_client.dart';
 import '../network/network_info.dart';
@@ -43,6 +48,10 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton(() => SignInUseCase(sl()));
   sl.registerLazySingleton(() => GuestSignInUseCase(sl()));
   sl.registerLazySingleton(() => SignOutUseCase(sl()));
+  sl.registerLazySingleton(() => NotificationPrefs(sl()));
+  sl.registerLazySingleton(() => NotificationService());
+   sl.registerLazySingleton(() => NewsRepository(dio: sl(), box: sl()));
+  sl.registerFactory(() => NewsCubit(sl()));
   sl.registerFactory(
     () => AuthBloc(
       signUpUseCase: sl(),
@@ -50,6 +59,8 @@ Future<void> initDependencies() async {
       guestSignInUseCase: sl(),
       signOutUseCase: sl(),
       repository: sl(),
+      sendPasswordResetUseCase: sl(),
+      
     ),
   );
 
@@ -70,4 +81,5 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton(() => GetMarketSnapshot(sl()));
   sl.registerFactory(() => MarketCubit(sl()));
   sl.registerLazySingleton(() => SettingsCubit(sl()));
+  sl.registerLazySingleton(() => SendPasswordResetUseCase(sl()));
 }

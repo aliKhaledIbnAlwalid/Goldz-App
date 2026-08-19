@@ -129,5 +129,12 @@
   "noDataFor": "No {category} data available.",
   "@noDataFor": { "placeholders": { "category": {} } },
   "nothingToShow": "Nothing to show yet.",
-  "pricesUnavailable": "Prices unavailable — try again later."
+  "pricesUnavailable": "Prices unavailable — try again later.",
+    "resetPassword": "Reset password",
+  "resetPasswordTitle": "Forgot your password?",
+  "resetPasswordSubtitle": "Enter your email and we'll send you a link to reset it.",
+  "sendResetLink": "Send reset link",
+  "checkYourInbox": "Check your inbox",
+  "resetEmailSentBody": "If an account exists for that email, we've sent a reset link. Check your spam folder too.",
+  "backToLogin": "Back to sign in"
 }

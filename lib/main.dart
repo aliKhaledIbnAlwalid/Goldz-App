@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:goldz/core/cashe/hive_boxes.dart';
+import 'package:goldz/core/notifications/notification_service.dart';
 import 'package:goldz/features/auth/presentation/login_screen.dart';
+import 'package:goldz/features/news/presentation/cubit/news_cubit.dart';
 import 'package:goldz/features/splash/screens/animated_splash_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -36,6 +38,7 @@ void main() async {
   await Hive.openBox(HiveBoxes.market);
 
   await initDependencies();
+  await sl<NotificationService>().init();
 
   runApp(const GoldzApp());
 }
@@ -54,6 +57,7 @@ class GoldzApp extends StatelessWidget {
         BlocProvider(create: (_) => CategoryCubit()),
         // Starts fetching during the splash animation.
         BlocProvider(create: (_) => sl<MarketCubit>()..load()),
+        BlocProvider(create: (_) => sl<NewsCubit>()),
       ],
       child: BlocBuilder<SettingsCubit, SettingsState>(
         builder: (context, settings) {

@@ -351,4 +351,27 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pricesUnavailable => 'الأسعار غير متاحة — حاول لاحقاً.';
+
+  @override
+  String get resetPassword => 'إعادة تعيين كلمة المرور';
+
+  @override
+  String get resetPasswordTitle => 'نسيت كلمة المرور؟';
+
+  @override
+  String get resetPasswordSubtitle =>
+      'أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة التعيين.';
+
+  @override
+  String get sendResetLink => 'إرسال الرابط';
+
+  @override
+  String get checkYourInbox => 'تحقّق من بريدك';
+
+  @override
+  String get resetEmailSentBody =>
+      'إذا كان هناك حساب بهذا البريد، فقد أرسلنا رابط إعادة التعيين. تحقّق من مجلد الرسائل غير المرغوبة أيضاً.';
+
+  @override
+  String get backToLogin => 'العودة لتسجيل الدخول';
 }

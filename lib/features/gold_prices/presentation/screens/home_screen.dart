@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
+import '../../../news/presentation/widgets/news_section.dart';
 import '../../../../core/constants/app_currencies.dart';
 import '../../../../core/currency/currency_cubit.dart';
 import '../../../../core/market_category/category_cubit.dart';
@@ -144,6 +144,8 @@ class HomeScreen extends StatelessWidget {
         _buildHorizontalList(context, category, items, currency.code, rate),
         const SizedBox(height: 26),
         _buildStatsGrid(context, category, snapshot, currency, rate),
+        const SizedBox(height: 28),
+        const NewsSection(),
         const SizedBox(height: 22),
         Center(
           child: Text(

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import '../../../../core/market_category/category_cubit.dart';
-import '../../../../core/shell/shell_cubit.dart';
+
 class SettingsState {
   final ThemeMode themeMode;
   final Locale locale;

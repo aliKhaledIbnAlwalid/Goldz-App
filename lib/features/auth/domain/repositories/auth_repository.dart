@@ -17,7 +17,6 @@ abstract class AuthRepository {
   Future<Either<Failure, UserEntity>> signInAsGuest();
 
   Future<Either<Failure, void>> signOut();
-
-  /// Returns the currently logged-in user, or null if nobody is signed in.
-  UserEntity? getCurrentUser();
+  Future<Either<Failure, void>> sendPasswordReset(String email);
+  Future<UserEntity?> getCurrentUser();
 }

@@ -6,8 +6,6 @@ import 'package:goldz/features/auth/presentation/bloc/auth_state.dart';
 import 'package:goldz/features/auth/presentation/login_screen.dart';
 import 'package:goldz/features/shell/presentation/screens/main_shell.dart';
 
-import '../../../../core/theme/app_palette.dart';
-import '../../../../core/theme/app_text.dart';
 
 class AnimatedSplashScreen extends StatefulWidget {
   const AnimatedSplashScreen({super.key});
@@ -27,7 +25,7 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
   late final Animation<Offset> _textSlide;
   late final Animation<double> _loaderOpacity;
 
-  bool _navigated = false;
+  bool _navigated = false; // guard: navigate only once
 
   @override
   void initState() {
@@ -50,12 +48,14 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
         curve: const Interval(0.0, 0.4, curve: Curves.easeIn),
       ),
     );
+
     _glowOpacity = Tween<double>(begin: 0.0, end: 0.35).animate(
       CurvedAnimation(
         parent: _controller,
         curve: const Interval(0.1, 0.6, curve: Curves.easeOut),
       ),
     );
+
     _textOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
@@ -71,6 +71,7 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
         curve: const Interval(0.4, 0.7, curve: Curves.easeOutCubic),
       ),
     );
+
     _loaderOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
@@ -80,7 +81,8 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
 
     _controller.forward();
 
-    Future.delayed(const Duration(milliseconds: 3200), () {
+    // Let the branding play, then ask the AuthBloc who is signed in.
+    Future.delayed(const Duration(milliseconds: 3400), () {
       if (!mounted) return;
       context.read<AuthBloc>().add(const AuthCheckRequested());
     });
@@ -92,6 +94,7 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
     super.dispose();
   }
 
+  /// Keeps your original fade transition.
   void _goTo(Widget page) {
     if (_navigated) return;
     _navigated = true;
@@ -106,27 +109,36 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    final c = context.c;
-
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthSuccess) {
-          _goTo(const MainShell());
+          _goTo(const MainShell()); 
         } else if (state is AuthUnauthenticated) {
           _goTo(const LoginScreen());
         }
       },
       child: Scaffold(
-        backgroundColor: c.background,
         body: AnimatedBuilder(
           animation: _controller,
           builder: (context, child) {
-            return SizedBox(
+            return Container(
               width: double.infinity,
               height: double.infinity,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFFfff9e6),
+                    Color(0xFFfff7db),
+                    Color(0xFFfff4cc),
+                  ],
+                ),
+              ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  // Logo with soft glow behind it
                   Stack(
                     alignment: Alignment.center,
                     children: [
@@ -139,8 +151,8 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
                             shape: BoxShape.circle,
                             gradient: RadialGradient(
                               colors: [
-                                c.brass.withOpacity(0.5),
-                                c.brass.withOpacity(0.0),
+                                const Color(0xFFD4AF37).withOpacity(0.6),
+                                const Color(0xFFD4AF37).withOpacity(0.0),
                               ],
                             ),
                           ),
@@ -150,53 +162,71 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
                         opacity: _logoOpacity.value,
                         child: Transform.scale(
                           scale: _logoScale.value,
-                          child: Container(
-                            width: 120,
-                            height: 120,
-                            // decoration: BoxDecoration(
-                            //   color: c.surface,
-                            //   shape: BoxShape.circle,
-                            //   border: Border.all(color: c.brass, width: 1.5),
-                            // ),
-                            child: Image.asset(
-                              'assets/Goldz_logo.png',
-                              fit: BoxFit.contain,
-                            )
+                          child: Image.asset(
+                            'assets/goldzz.png',
+                            width: 200,
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 30),
+
+                  const SizedBox(height: 24),
+
+                  // App name
                   Opacity(
                     opacity: _textOpacity.value,
                     child: Transform.translate(
                       offset: Offset(0, _textSlide.value.dy * 20),
                       child: Column(
                         children: [
-                          Text(
-                            'GOLDZ',
-                            style: AppText.heading(32, color: c.brass)
-                                .copyWith(letterSpacing: 6),
+                          ShaderMask(
+                            shaderCallback: (bounds) => const LinearGradient(
+                              colors: [
+                                Color(0xFFF5D67A),
+                                Color(0xFFD4AF37),
+                                Color(0xFFB8860B),
+                              ],
+                            ).createShader(bounds),
+                            child: const Text(
+                              'GOLDZ',
+                              style: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 6,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 6),
                           Text(
                             'أسعار الذهب لحظة بلحظة',
-                            style: AppText.label(16, color: c.textSecondary),
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 1.2,
+                              color: const Color.fromARGB(255, 0, 0, 0)
+                                  .withOpacity(0.55),
+                            ),
                           ),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 52),
+
+                  const SizedBox(height: 48),
+
+                  // Subtle loading indicator
                   Opacity(
                     opacity: _loaderOpacity.value,
-                    child: SizedBox(
+                    child: const SizedBox(
                       width: 22,
                       height: 22,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(c.brass),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Color(0xFFD4AF37),
+                        ),
                       ),
                     ),
                   ),

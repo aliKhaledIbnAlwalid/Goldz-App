@@ -70,7 +70,24 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  UserEntity? getCurrentUser() => remoteDataSource.getCurrentUser();
+  Future<Either<Failure, void>> sendPasswordReset(String email) async {
+    try {
+      await remoteDataSource.sendPasswordReset(email);
+      return const Right(null);
+    } on FirebaseAuthException catch (e) {
+      // SECURITY: 'user-not-found' is treated as success. Revealing which
+      // emails are registered lets attackers enumerate your user base.
+      if (e.code == 'user-not-found' || e.code == 'invalid-email') {
+        return const Right(null);
+      }
+      return Left(AuthFailure(_mapFirebaseError(e.code)));
+    } catch (_) {
+      return const Left(ServerFailure('Could not send the reset email.'));
+    }
+  }
+
+  @override
+  Future<UserEntity?> getCurrentUser() => remoteDataSource.getCurrentUser();
 
   String _mapFirebaseError(String code) {
     switch (code) {
