@@ -1,35 +1,68 @@
+import 'package:flutter/widgets.dart';
+import '../../../../core/utils/context_ext.dart';
 import '../../domain/entities/price_item.dart';
 
-/// Human-friendly descriptors — what each purity is actually used for.
-String assetDescriptor(MarketCategory category, String id) {
+String categoryLabel(BuildContext context, MarketCategory category) =>
+    switch (category) {
+      MarketCategory.gold => context.l10n.gold,
+      MarketCategory.silver => context.l10n.silver,
+      MarketCategory.currency => context.l10n.currency,
+      // TODO: Handle this case.
+      MarketCategory.all => throw UnimplementedError(),
+    };
+
+String sectionTitle(BuildContext context, MarketCategory category) =>
+    switch (category) {
+      MarketCategory.gold => context.l10n.otherKarats,
+      MarketCategory.silver => context.l10n.otherPurities,
+      MarketCategory.currency => context.l10n.otherRates,
+      // TODO: Handle this case.
+      MarketCategory.all => throw UnimplementedError(),
+    };
+
+/// Localized item name — replaces the hardcoded English in the model.
+String itemLabel(
+    BuildContext context, MarketCategory category, PriceItem item) {
+  final l = context.l10n;
+  return switch (category) {
+    MarketCategory.gold => l.karatLabel(item.id),
+    MarketCategory.silver => l.silverLabel(item.id),
+    MarketCategory.currency => item.label,
+    // TODO: Handle this case.
+    MarketCategory.all => throw UnimplementedError(),
+  };
+}
+
+String assetDescriptor(
+    BuildContext context, MarketCategory category, String id) {
+  final l = context.l10n;
   switch (category) {
     case MarketCategory.gold:
       return switch (id) {
-        '24' => 'RAW GOLD',
-        '22' => 'STANDARD',
-        '21' => 'POPULAR JEWELRY',
-        '18' => 'FINE JEWELRY',
-        '14' => 'ALLOY',
-        '12' => 'LOW ALLOY',
-        '10' => 'BUDGET ALLOY',
-        '9' => 'MINIMUM PURITY',
-        _ => 'GOLD',
+        '24' => l.descRawGold,
+        '22' => l.descStandard,
+        '21' => l.descPopularJewelry,
+        '18' => l.descFineJewelry,
+        '14' => l.descAlloy,
+        '12' => l.descLowAlloy,
+        '10' => l.descBudgetAlloy,
+        _ => l.descMinimumPurity,
       };
     case MarketCategory.silver:
       return switch (id) {
-        '999' => 'FINE SILVER',
-        '958' => 'BRITANNIA',
-        '925' => 'STERLING',
-        '800' => 'LOW GRADE',
-        _ => 'SILVER',
+        '999' => l.descFineSilver,
+        '958' => l.descBritannia,
+        '925' => l.descSterling,
+        _ => l.descLowGrade,
       };
     case MarketCategory.currency:
-      return 'EXCHANGE RATE';
+      return l.descExchangeRate;
+    case MarketCategory.all:
+      // TODO: Handle this case.
+      throw UnimplementedError();
   }
 }
 
-/// Trading popularity in the Egyptian market — used for the
-/// "Most Traded" sort option.
 const _goldPopularity = ['21', '18', '24', '22', '14', '12', '10', '9'];
 const _silverPopularity = ['925', '999', '958', '800'];
 const _currencyPopularity = ['USD', 'SAR', 'EUR', 'AED', 'GBP', 'KWD'];
@@ -39,6 +72,8 @@ int popularityRank(MarketCategory category, String id) {
     MarketCategory.gold => _goldPopularity,
     MarketCategory.silver => _silverPopularity,
     MarketCategory.currency => _currencyPopularity,
+    // TODO: Handle this case.
+    MarketCategory.all => throw UnimplementedError(),
   };
   final index = list.indexOf(id);
   return index == -1 ? 999 : index;

@@ -107,5 +107,27 @@
   "hoursAgo": "{count}h ago",
   "@hoursAgo": { "placeholders": { "count": {} } },
   "daysAgo": "{count}d ago",
-  "@daysAgo": { "placeholders": { "count": {} } }
+  
+  "@daysAgo": { "placeholders": { "count": {} } }, 
+  "descRawGold": "RAW GOLD",
+  "descStandard": "STANDARD",
+  "descPopularJewelry": "POPULAR JEWELRY",
+  "descFineJewelry": "FINE JEWELRY",
+  "descAlloy": "ALLOY",
+  "descLowAlloy": "LOW ALLOY",
+  "descBudgetAlloy": "BUDGET ALLOY",
+  "descMinimumPurity": "MINIMUM PURITY",
+  "descFineSilver": "FINE SILVER",
+  "descBritannia": "BRITANNIA",
+  "descSterling": "STERLING",
+  "descLowGrade": "LOW GRADE",
+  "descExchangeRate": "EXCHANGE RATE",
+  "karatLabel": "Karat {k}",
+  "@karatLabel": { "placeholders": { "k": {} } },
+  "silverLabel": "Silver {p}",
+  "@silverLabel": { "placeholders": { "p": {} } },
+  "noDataFor": "No {category} data available.",
+  "@noDataFor": { "placeholders": { "category": {} } },
+  "nothingToShow": "Nothing to show yet.",
+  "pricesUnavailable": "Prices unavailable — try again later."
 }

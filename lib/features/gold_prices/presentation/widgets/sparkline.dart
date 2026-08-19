@@ -5,6 +5,7 @@ class Sparkline extends StatelessWidget {
   final Color color;
   final bool showEndDot;
   final bool showFill;
+  final Color dotRingColor;
 
   const Sparkline({
     super.key,
@@ -12,13 +13,14 @@ class Sparkline extends StatelessWidget {
     this.color = const Color(0xFF8A6A2F),
     this.showEndDot = false,
     this.showFill = false,
+    this.dotRingColor = const Color(0xFFFFFFFF),
   });
 
   @override
   Widget build(BuildContext context) {
     if (data.length < 2) return const SizedBox.shrink();
     return CustomPaint(
-      painter: _SparklinePainter(data, color, showEndDot, showFill),
+      painter: _SparklinePainter(data, color, showEndDot, showFill, dotRingColor),
       size: Size.infinite,
     );
   }
@@ -29,8 +31,9 @@ class _SparklinePainter extends CustomPainter {
   final Color color;
   final bool showEndDot;
   final bool showFill;
+  final Color dotRingColor;
 
-  _SparklinePainter(this.data, this.color, this.showEndDot, this.showFill);
+  _SparklinePainter(this.data, this.color, this.showEndDot, this.showFill, this.dotRingColor);
 
   @override
   void paint(Canvas canvas, Size size) {

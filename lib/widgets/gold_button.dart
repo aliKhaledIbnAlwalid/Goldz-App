@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:goldz/core/theme/app_palette.dart';
+import 'package:goldz/core/theme/app_text.dart';
+
 
 class GoldButton extends StatelessWidget {
   final String label;
@@ -15,38 +17,37 @@ class GoldButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: LinearGradient(
-          colors: [context.c.brassLight, context.c.brass, context.c.brass],
-        ),
-      ),
+    final c = context.c;
+
+    return SizedBox(
+      width: double.infinity,
       child: ElevatedButton(
-        onPressed: onPressed,
+        onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
+          backgroundColor: c.brass,
+          disabledBackgroundColor: c.brass.withOpacity(0.5),
+          foregroundColor: c.onBrass,
+          elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(30),
           ),
         ),
         child: isLoading
-            ? const SizedBox(
+            ? SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Color(0xFF3B2A08),
+                  color: c.onBrass,
                 ),
               )
             : Text(
                 label,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF3B2A08),
+                style: AppText.label(
+                  15,
+                  color: c.onBrass,
+                  weight: FontWeight.w700,
                 ),
               ),
       ),

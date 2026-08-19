@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:goldz/core/theme/app_palette.dart';
+import '../../../../core/theme/app_palette.dart';
 import '../../../../core/theme/app_text.dart';
 import 'sparkline.dart';
 
@@ -23,17 +23,18 @@ class KaratCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.c;
     final trendColor = change == null
-        ? context.c.textMuted
-        : (isPositive ? context.c.positive : context.c.negative);
+        ? c.textMuted
+        : (isPositive ? c.positive : c.negative);
 
     return Container(
       width: 168,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: context.c.surface,
+        color: c.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: context.c.border, width: 1),
+        border: Border.all(color: c.border, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,16 +42,15 @@ class KaratCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 9, vertical: 5),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
                 decoration: BoxDecoration(
-                  color: context.c.surfaceAlt,
+                  color: c.surfaceAlt,
                   borderRadius: BorderRadius.circular(7),
                 ),
                 child: Text(badge,
                     style: AppText.label(11.5,
-                        color: context.c.textMuted,
-                        weight: FontWeight.w700)),
+                        color: c.textPrimary, weight: FontWeight.w700)),
               ),
               const Spacer(),
               if (change != null)
@@ -70,16 +70,19 @@ class KaratCard extends StatelessWidget {
                   ],
                 )
               else
-                Text('—', style: AppText.label(11, color: context.c.brass)),
+                Text('—', style: AppText.label(11, color: c.textMuted)),
             ],
           ),
           const SizedBox(height: 14),
-          Text(price, style: AppText.price(24, color: context.c.textMuted)),
+          Text(price,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppText.price(24, color: c.textPrimary)),
           const SizedBox(height: 3),
           Text(currencyCode,
-              style: AppText.label(11.5, color: context.c.textMuted)),
-                    const SizedBox(height: 10),
-          // Expanded absorbs leftover height instead of overflowing.
+              style: AppText.label(11.5, color: c.textMuted)),
+          const SizedBox(height: 10),
+          // Absorbs leftover height — no more overflow on font scaling.
           Expanded(
             child: SizedBox(
               width: double.infinity,

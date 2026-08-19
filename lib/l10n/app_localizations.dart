@@ -625,6 +625,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count}d ago'**
   String daysAgo(Object count);
+
+  /// No description provided for @descRawGold.
+  ///
+  /// In en, this message translates to:
+  /// **'RAW GOLD'**
+  String get descRawGold;
+
+  /// No description provided for @descStandard.
+  ///
+  /// In en, this message translates to:
+  /// **'STANDARD'**
+  String get descStandard;
+
+  /// No description provided for @descPopularJewelry.
+  ///
+  /// In en, this message translates to:
+  /// **'POPULAR JEWELRY'**
+  String get descPopularJewelry;
+
+  /// No description provided for @descFineJewelry.
+  ///
+  /// In en, this message translates to:
+  /// **'FINE JEWELRY'**
+  String get descFineJewelry;
+
+  /// No description provided for @descAlloy.
+  ///
+  /// In en, this message translates to:
+  /// **'ALLOY'**
+  String get descAlloy;
+
+  /// No description provided for @descLowAlloy.
+  ///
+  /// In en, this message translates to:
+  /// **'LOW ALLOY'**
+  String get descLowAlloy;
+
+  /// No description provided for @descBudgetAlloy.
+  ///
+  /// In en, this message translates to:
+  /// **'BUDGET ALLOY'**
+  String get descBudgetAlloy;
+
+  /// No description provided for @descMinimumPurity.
+  ///
+  /// In en, this message translates to:
+  /// **'MINIMUM PURITY'**
+  String get descMinimumPurity;
+
+  /// No description provided for @descFineSilver.
+  ///
+  /// In en, this message translates to:
+  /// **'FINE SILVER'**
+  String get descFineSilver;
+
+  /// No description provided for @descBritannia.
+  ///
+  /// In en, this message translates to:
+  /// **'BRITANNIA'**
+  String get descBritannia;
+
+  /// No description provided for @descSterling.
+  ///
+  /// In en, this message translates to:
+  /// **'STERLING'**
+  String get descSterling;
+
+  /// No description provided for @descLowGrade.
+  ///
+  /// In en, this message translates to:
+  /// **'LOW GRADE'**
+  String get descLowGrade;
+
+  /// No description provided for @descExchangeRate.
+  ///
+  /// In en, this message translates to:
+  /// **'EXCHANGE RATE'**
+  String get descExchangeRate;
+
+  /// No description provided for @karatLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Karat {k}'**
+  String karatLabel(Object k);
+
+  /// No description provided for @silverLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Silver {p}'**
+  String silverLabel(Object p);
+
+  /// No description provided for @noDataFor.
+  ///
+  /// In en, this message translates to:
+  /// **'No {category} data available.'**
+  String noDataFor(Object category);
+
+  /// No description provided for @nothingToShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to show yet.'**
+  String get nothingToShow;
+
+  /// No description provided for @pricesUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Prices unavailable — try again later.'**
+  String get pricesUnavailable;
 }
 
 class _AppLocalizationsDelegate

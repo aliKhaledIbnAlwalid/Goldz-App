@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'price_item.dart';
 
+
 class MarketSnapshot extends Equatable {
   final List<PriceItem> gold;
   final List<PriceItem> silver;
@@ -27,6 +28,8 @@ class MarketSnapshot extends Equatable {
         MarketCategory.gold => gold,
         MarketCategory.silver => silver,
         MarketCategory.currency => currency,
+    // TODO: Handle this case.
+    MarketCategory.all => throw UnimplementedError(),
       };
 
   PriceItem headline(MarketCategory category) => switch (category) {
@@ -35,6 +38,8 @@ class MarketSnapshot extends Equatable {
         MarketCategory.silver =>
           silver.firstWhere((e) => e.id == '925', orElse: () => silver.first),
         MarketCategory.currency => currency.first,
+    // TODO: Handle this case.
+    MarketCategory.all => throw UnimplementedError(),
       };
 
   /// Conversion rate for a currency code, with a safe fallback.

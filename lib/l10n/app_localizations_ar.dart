@@ -291,4 +291,64 @@ class AppLocalizationsAr extends AppLocalizations {
   String daysAgo(Object count) {
     return 'منذ $count ي';
   }
+
+  @override
+  String get descRawGold => 'ذهب خام';
+
+  @override
+  String get descStandard => 'قياسي';
+
+  @override
+  String get descPopularJewelry => 'مجوهرات شائعة';
+
+  @override
+  String get descFineJewelry => 'مجوهرات فاخرة';
+
+  @override
+  String get descAlloy => 'سبيكة';
+
+  @override
+  String get descLowAlloy => 'سبيكة منخفضة';
+
+  @override
+  String get descBudgetAlloy => 'سبيكة اقتصادية';
+
+  @override
+  String get descMinimumPurity => 'أقل نقاء';
+
+  @override
+  String get descFineSilver => 'فضة نقية';
+
+  @override
+  String get descBritannia => 'بريتانيا';
+
+  @override
+  String get descSterling => 'استرليني';
+
+  @override
+  String get descLowGrade => 'درجة منخفضة';
+
+  @override
+  String get descExchangeRate => 'سعر الصرف';
+
+  @override
+  String karatLabel(Object k) {
+    return 'عيار $k';
+  }
+
+  @override
+  String silverLabel(Object p) {
+    return 'فضة $p';
+  }
+
+  @override
+  String noDataFor(Object category) {
+    return 'لا توجد بيانات $category.';
+  }
+
+  @override
+  String get nothingToShow => 'لا يوجد ما يُعرض بعد.';
+
+  @override
+  String get pricesUnavailable => 'الأسعار غير متاحة — حاول لاحقاً.';
 }

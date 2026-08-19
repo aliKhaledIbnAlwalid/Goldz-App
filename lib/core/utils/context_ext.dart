@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:goldz/l10n/app_localizations.dart';
+import '../../l10n/app_localizations.dart';
 
 extension L10nX on BuildContext {
-  AppLocalizations get l10n => AppLocalizations.of(this)!;
+  AppLocalizations get l10n => AppLocalizations.of(this);
+  bool get isRtl => Directionality.of(this) == TextDirection.rtl;
 }

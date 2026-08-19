@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:goldz/core/theme/app_palette.dart';
+import '../../../../core/theme/app_palette.dart';
 import '../../../../core/theme/app_text.dart';
+import '../../../../core/utils/context_ext.dart';
 import 'sparkline.dart';
 
 class LivePriceCard extends StatelessWidget {
@@ -27,26 +28,25 @@ class LivePriceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final trendColor = isPositive ? context.c.positive : context.c.negative;
+    final c = context.c;
+    final l = context.l10n;
+    final trendColor = isPositive ? c.positive : c.negative;
 
     return Container(
       decoration: BoxDecoration(
-        color: context.c.surface,
+        color: c.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: context.c.border, width: 1),
+        border: Border.all(color: c.border, width: 1),
         boxShadow: [
-          BoxShadow(
-            color: context.c.cardShadow,
-            blurRadius: 18,
-            offset: const Offset(0, 6),
-          ),
+          BoxShadow(color: c.cardShadow, blurRadius: 18,
+              offset: const Offset(0, 6)),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+            padding: const EdgeInsetsDirectional.fromSTEB(20, 18, 20, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -56,22 +56,17 @@ class LivePriceCard extends StatelessWidget {
                       width: 7,
                       height: 7,
                       decoration: BoxDecoration(
-                        color: context.c.live,
-                        shape: BoxShape.circle,
-                      ),
+                          color: c.live, shape: BoxShape.circle),
                     ),
                     const SizedBox(width: 7),
-                    Text('LIVE',
-                        style: AppText.micro(10, color: context.c.live)),
+                    Text(l.live, style: AppText.micro(10, color: c.live)),
                     const Spacer(),
                     if (changePercent != null)
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: isPositive
-                              ? context.c.positiveSoft
-                              : context.c.negativeSoft,
+                          color: isPositive ? c.positiveSoft : c.negativeSoft,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
@@ -92,20 +87,19 @@ class LivePriceCard extends StatelessWidget {
                         ),
                       )
                     else
-                      Text('no change data yet',
-                          style: AppText.label(11,
-                              color: context.c.textMuted)),
+                      Text(l.noChangeData,
+                          style: AppText.label(11, color: c.textMuted)),
                   ],
                 ),
                 const SizedBox(height: 12),
                 Text(assetLabel,
                     style: AppText.label(14.5,
-                        color: context.c.brass, weight: FontWeight.w600)),
+                        color: c.brass, weight: FontWeight.w600)),
                 const SizedBox(height: 8),
-                Text(price, style: AppText.price(40, color: context.c.brass)),
+                Text(price, style: AppText.price(40, color: c.brass)),
                 const SizedBox(height: 6),
                 Text(unit,
-                    style: AppText.label(13, color: context.c.textSecondary)),
+                    style: AppText.label(13, color: c.textSecondary)),
               ],
             ),
           ),
@@ -113,32 +107,38 @@ class LivePriceCard extends StatelessWidget {
             height: 92,
             width: double.infinity,
             child: Padding(
-              padding: const EdgeInsets.only(left: 20, right: 20, top: 8),
+              padding:
+                  const EdgeInsetsDirectional.fromSTEB(20, 8, 20, 0),
               child: Sparkline(
                 data: chartData,
-                color: context.c.brassLight,
+                color: c.brassLight,
                 showEndDot: true,
+                dotRingColor: c.surface,
               ),
             ),
           ),
-          Divider(height: 1, color: context.c.divider),
+          Divider(height: 1, color: c.divider),
           InkWell(
             onTap: onViewDetails,
-            borderRadius: const BorderRadius.vertical(
-                bottom: Radius.circular(20)),
+            borderRadius:
+                const BorderRadius.vertical(bottom: Radius.circular(20)),
             child: Padding(
               padding: const EdgeInsets.symmetric(
                   horizontal: 20, vertical: 14),
               child: Row(
                 children: [
                   Text(usdLabel,
-                      style: AppText.label(12.5,
-                          color: context.c.textSecondary)),
+                      style: AppText.label(12.5, color: c.textSecondary)),
                   const Spacer(),
-                  Text('VIEW DETAILS',
-                      style: AppText.micro(11, color:context.c.brass)),
-                  Icon(Icons.chevron_right_rounded,
-                      size: 18, color: context.c.brass),
+                  Text(l.viewDetails,
+                      style: AppText.micro(11, color: c.brass)),
+                  Icon(
+                    context.isRtl
+                        ? Icons.chevron_left_rounded
+                        : Icons.chevron_right_rounded,
+                    size: 18,
+                    color: c.brass,
+                  ),
                 ],
               ),
             ),

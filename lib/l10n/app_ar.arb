@@ -98,5 +98,24 @@
   "justNow": "الآن",
   "minutesAgo": "منذ {count} د",
   "hoursAgo": "منذ {count} س",
-  "daysAgo": "منذ {count} ي"
+  
+  "daysAgo": "منذ {count} ي",
+  "descRawGold": "ذهب خام",
+  "descStandard": "قياسي",
+  "descPopularJewelry": "مجوهرات شائعة",
+  "descFineJewelry": "مجوهرات فاخرة",
+  "descAlloy": "سبيكة",
+  "descLowAlloy": "سبيكة منخفضة",
+  "descBudgetAlloy": "سبيكة اقتصادية",
+  "descMinimumPurity": "أقل نقاء",
+  "descFineSilver": "فضة نقية",
+  "descBritannia": "بريتانيا",
+  "descSterling": "استرليني",
+  "descLowGrade": "درجة منخفضة",
+  "descExchangeRate": "سعر الصرف",
+  "karatLabel": "عيار {k}",
+  "silverLabel": "فضة {p}",
+  "noDataFor": "لا توجد بيانات {category}.",
+  "nothingToShow": "لا يوجد ما يُعرض بعد.",
+  "pricesUnavailable": "الأسعار غير متاحة — حاول لاحقاً."
 }
