@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:goldz/features/auth/domain/usecases/send_password_reset_usecase.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/usecases/guest_sign_in_usecase.dart';
 import '../../domain/usecases/sign_in_usecase.dart';
@@ -13,6 +14,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final GuestSignInUseCase guestSignInUseCase;
   final SignOutUseCase signOutUseCase;
   final AuthRepository repository;
+  final SendPasswordResetUseCase sendPasswordResetUseCase;
 
   AuthBloc({
     required this.signUpUseCase,
@@ -20,12 +22,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.guestSignInUseCase,
     required this.signOutUseCase,
     required this.repository,
+    required this.sendPasswordResetUseCase,
   }) : super(const AuthInitial()) {
     on<SignUpRequested>(_onSignUp);
     on<SignInRequested>(_onSignIn);
     on<GuestSignInRequested>(_onGuestSignIn);
     on<SignOutRequested>(_onSignOut);
     on<AuthCheckRequested>(_onAuthCheck);
+    on<PasswordResetRequested>(_onPasswordReset);
   }
 
   Future<void> _onSignUp(
@@ -79,8 +83,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(const AuthUnauthenticated());
   }
 
-  void _onAuthCheck(AuthCheckRequested event, Emitter<AuthState> emit) {
-    final user = repository.getCurrentUser();
+  Future<void> _onPasswordReset(
+    PasswordResetRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    final result = await sendPasswordResetUseCase(event.email);
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (_) => emit(const PasswordResetSent()),
+    );
+  }
+  Future<void> _onAuthCheck(
+    AuthCheckRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    final user = await repository.getCurrentUser();
     if (user != null) {
       emit(AuthSuccess(user));
     } else {

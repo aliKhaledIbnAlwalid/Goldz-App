@@ -2,18 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_currencies.dart';
 import '../../../../core/currency/currency_cubit.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_palette.dart';
+import '../../../../core/theme/app_text.dart';
+import '../../../../core/utils/context_ext.dart';
 
 Future<void> showCurrencySheet(BuildContext context) {
+  final c = context.c;
   return showModalBottomSheet(
     context: context,
-    backgroundColor: AppColors.card,
+    backgroundColor: c.surface,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
     ),
     builder: (sheetContext) {
       final selected = context.read<CurrencyCubit>().state;
-
       return Padding(
         padding: const EdgeInsets.fromLTRB(20, 14, 20, 32),
         child: Column(
@@ -25,25 +27,17 @@ Future<void> showCurrencySheet(BuildContext context) {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.divider,
+                  color: c.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
-              'Display currency',
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-            ),
+            Text(context.l10n.displayCurrency,
+                style: AppText.heading(18, color: c.textPrimary)),
             const SizedBox(height: 4),
-            const Text(
-              'Prices will be converted instantly',
-              style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
-            ),
+            Text(context.l10n.currencySubtitle,
+                style: AppText.label(12.5, color: c.textSecondary)),
             const SizedBox(height: 18),
             ...AppCurrencies.supported.map((currency) {
               final isSelected = currency.code == selected.code;
@@ -59,13 +53,11 @@ Future<void> showCurrencySheet(BuildContext context) {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 14),
                     decoration: BoxDecoration(
-                      color: AppColors.cardLight,
+                      color: c.surfaceAlt,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isSelected
-                            ? AppColors.gold
-                            : AppColors.divider,
-                        width: isSelected ? 1.2 : 0.6,
+                        color: isSelected ? c.brass : c.border,
+                        width: isSelected ? 1.4 : 1,
                       ),
                     ),
                     child: Row(
@@ -77,27 +69,19 @@ Future<void> showCurrencySheet(BuildContext context) {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                currency.code,
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                              Text(
-                                currency.name,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
+                              Text(currency.code,
+                                  style: AppText.label(15,
+                                      color: c.textPrimary,
+                                      weight: FontWeight.w700)),
+                              Text(currency.name,
+                                  style: AppText.label(12,
+                                      color: c.textSecondary)),
                             ],
                           ),
                         ),
                         if (isSelected)
-                          const Icon(Icons.check_circle_rounded,
-                              color: AppColors.gold, size: 22),
+                          Icon(Icons.check_circle_rounded,
+                              color: c.brass, size: 22),
                       ],
                     ),
                   ),

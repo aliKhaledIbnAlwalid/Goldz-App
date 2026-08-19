@@ -4,7 +4,7 @@ import 'package:goldz/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:goldz/features/auth/presentation/bloc/auth_event.dart';
 import 'package:goldz/features/auth/presentation/bloc/auth_state.dart';
 import 'package:goldz/features/auth/presentation/login_screen.dart';
-import 'package:goldz/features/gold_prices/presentation/screens/home_screen.dart';
+import 'package:goldz/features/shell/presentation/screens/main_shell.dart';
 
 
 class AnimatedSplashScreen extends StatefulWidget {
@@ -112,7 +112,7 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthSuccess) {
-          _goTo(const HomeScreen());
+          _goTo(const MainShell()); 
         } else if (state is AuthUnauthenticated) {
           _goTo(const LoginScreen());
         }

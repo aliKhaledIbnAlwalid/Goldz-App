@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goldz/widgets/gold_button.dart';
-import '../../../../core/theme/app_colors.dart';
+
+import '../../../../core/theme/app_palette.dart';
+import '../../../../core/theme/app_text.dart';
+import '../../../../core/utils/context_ext.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -18,7 +21,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
+  final _confirmController = TextEditingController();
   bool _obscurePassword = true;
 
   @override
@@ -26,7 +29,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    _confirmPasswordController.dispose();
+    _confirmController.dispose();
     super.dispose();
   }
 
@@ -44,12 +47,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.c;
+    final l = context.l10n;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: c.background,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: c.textPrimary),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: SafeArea(
         child: BlocConsumer<AuthBloc, AuthState>(
@@ -58,7 +65,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.message),
-                  backgroundColor: AppColors.negative,
+                  backgroundColor: c.negative,
                   behavior: SnackBarBehavior.floating,
                 ),
               );
@@ -70,131 +77,113 @@ class _RegisterScreenState extends State<RegisterScreen> {
             final isLoading = state is AuthLoading;
 
             return SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
               child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    const SizedBox(height: 30),
+                    Text(l.createYourAccount,
+                        style: AppText.heading(28, color: c.textPrimary)),
                     const SizedBox(height: 8),
-                    const Text(
-                      'Create your account',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Track gold prices and save your favorites',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
+                    Text(l.createAccountSubtitle,
+                        style: AppText.label(13.5, color: c.brass)),
+                    const SizedBox(height: 34),
 
-                    // ── Name (required) ──
-                    TextFormField(
+                    _field(
+                      label: l.fullName,
                       controller: _nameController,
                       textCapitalization: TextCapitalization.words,
-                      textInputAction: TextInputAction.next,
-                      style: const TextStyle(color: AppColors.textPrimary),
-                      decoration: const InputDecoration(
-                        labelText: 'Full name',
-                        prefixIcon: Icon(Icons.person_outline, size: 20),
-                      ),
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) {
-                          return 'Name is required';
+                          return l.nameRequired;
                         }
-                        if (v.trim().length < 3) {
-                          return 'Name must be at least 3 characters';
-                        }
+                        if (v.trim().length < 3) return l.nameTooShort;
                         return null;
                       },
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 22),
 
-                    // ── Email ──
-                    TextFormField(
+                    _field(
+                      label: l.email,
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                      style: const TextStyle(color: AppColors.textPrimary),
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        prefixIcon: Icon(Icons.alternate_email, size: 20),
-                      ),
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) {
-                          return 'Email is required';
+                          return l.emailRequired;
                         }
                         if (!v.contains('@') || !v.contains('.')) {
-                          return 'Enter a valid email';
+                          return l.emailInvalid;
                         }
                         return null;
                       },
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 22),
 
-                    // ── Password ──
-                    TextFormField(
+                    _field(
+                      label: l.password,
                       controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      textInputAction: TextInputAction.next,
-                      style: const TextStyle(color: AppColors.textPrimary),
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        prefixIcon: const Icon(Icons.lock_outline, size: 20),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                          ),
-                          onPressed: () => setState(
-                            () => _obscurePassword = !_obscurePassword,
-                          ),
+                      obscure: _obscurePassword,
+                      suffix: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                          size: 19,
+                          color: c.textMuted,
                         ),
+                        onPressed: () => setState(
+                            () => _obscurePassword = !_obscurePassword),
                       ),
                       validator: (v) {
                         if (v == null || v.isEmpty) {
-                          return 'Password is required';
+                          return l.passwordRequired;
                         }
-                        if (v.length < 6) return 'Min 6 characters';
+                        if (v.length < 6) return l.passwordTooShort;
                         return null;
                       },
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 22),
 
-                    // ── Confirm password ──
-                    TextFormField(
-                      controller: _confirmPasswordController,
-                      obscureText: _obscurePassword,
+                    _field(
+                      label: l.confirmPassword,
+                      controller: _confirmController,
+                      obscure: _obscurePassword,
                       textInputAction: TextInputAction.done,
-                      onFieldSubmitted: (_) => _submit(),
-                      style: const TextStyle(color: AppColors.textPrimary),
-                      decoration: const InputDecoration(
-                        labelText: 'Confirm password',
-                        prefixIcon: Icon(Icons.lock_outline, size: 20),
-                      ),
+                      onSubmitted: (_) => _submit(),
                       validator: (v) {
                         if (v != _passwordController.text) {
-                          return 'Passwords do not match';
+                          return l.passwordsDoNotMatch;
                         }
                         return null;
                       },
                     ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 36),
 
                     GoldButton(
-                      label: 'Create Account',
+                      label: l.createAccount,
                       isLoading: isLoading,
-                      onPressed: isLoading ? null : _submit,
+                      onPressed: _submit,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 22),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(l.haveAccount,
+                            style:
+                                AppText.label(13, color: c.textSecondary)),
+                        const SizedBox(width: 6),
+                        GestureDetector(
+                          onTap: () => Navigator.of(context).pop(),
+                          child: Text(l.logIn,
+                              style: AppText.label(13,
+                                  color: c.brass,
+                                  weight: FontWeight.w700)),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -202,6 +191,60 @@ class _RegisterScreenState extends State<RegisterScreen> {
           },
         ),
       ),
+    );
+  }
+
+  /// Underlined field style from the Stitch mockup.
+  Widget _field({
+    required String label,
+    required TextEditingController controller,
+    String? Function(String?)? validator,
+    bool obscure = false,
+    Widget? suffix,
+    TextInputType? keyboardType,
+    TextCapitalization textCapitalization = TextCapitalization.none,
+    TextInputAction textInputAction = TextInputAction.next,
+    void Function(String)? onSubmitted,
+  }) {
+    final c = context.c;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: AppText.label(12.5,
+                color: c.brass, weight: FontWeight.w600)),
+        const SizedBox(height: 4),
+        TextFormField(
+          controller: controller,
+          obscureText: obscure,
+          keyboardType: keyboardType,
+          textCapitalization: textCapitalization,
+          textInputAction: textInputAction,
+          onFieldSubmitted: onSubmitted,
+          validator: validator,
+          style: AppText.label(15, color: c.textPrimary),
+          decoration: InputDecoration(
+            filled: false,
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(vertical: 10),
+            suffixIcon: suffix,
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: c.border),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: c.brass, width: 1.4),
+            ),
+            errorBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: c.negative),
+            ),
+            focusedErrorBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: c.negative, width: 1.4),
+            ),
+            errorStyle: AppText.label(11.5, color: c.negative),
+          ),
+        ),
+      ],
     );
   }
 }

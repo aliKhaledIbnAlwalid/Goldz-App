@@ -3,95 +3,167 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_currencies.dart';
 import '../../../../core/currency/currency_cubit.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/market_category/category_cubit.dart';
+import '../../../../core/theme/app_palette.dart';
+import '../../../../core/theme/app_text.dart';
+import '../../../../core/utils/context_ext.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../domain/entities/price_item.dart';
 import '../cubit/market_cubit.dart';
 import '../cubit/market_state.dart';
+import '../utils/asset_labels.dart';
+import '../widgets/category_tabs.dart';
 import '../widgets/sparkline.dart';
 
-class AllPricesScreen extends StatelessWidget {
-  final MarketCategory category;
+enum _SortMode { purity, traded }
 
-  const AllPricesScreen({super.key, required this.category});
+class AllPricesScreen extends StatefulWidget {
+  const AllPricesScreen({super.key});
+
+  @override
+  State<AllPricesScreen> createState() => _AllPricesScreenState();
+}
+
+class _AllPricesScreenState extends State<AllPricesScreen> {
+  _SortMode _sort = _SortMode.purity;
+
+  List<PriceItem> _sorted(List<PriceItem> items, MarketCategory category) {
+    final list = [...items];
+    if (_sort == _SortMode.purity) {
+      list.sort((a, b) => b.usdValue.compareTo(a.usdValue));
+    } else {
+      list.sort((a, b) => popularityRank(category, a.id)
+          .compareTo(popularityRank(category, b.id)));
+    }
+    return list;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
-        title: Text(
-          'All ${category.label}',
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        actions: [
-          BlocBuilder<CurrencyCubit, AppCurrency>(
-            builder: (context, currency) => Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: Center(
-                child: Text(
-                  '${currency.flag}  ${currency.code}',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
+    final c = context.c;
+
+    return BlocBuilder<CategoryCubit, MarketCategory>(
+      builder: (context, category) {
+        return Scaffold(
+          backgroundColor: c.background,
+          appBar: AppBar(
+            automaticallyImplyLeading: false,
+            title: Text(
+              context.l10n.allTitle(categoryLabel(context, category)),
+              style: AppText.heading(19, color: c.brass),
+            ),
+            actions: [
+              BlocBuilder<CurrencyCubit, AppCurrency>(
+                builder: (context, currency) => Padding(
+                  padding: const EdgeInsetsDirectional.only(end: 18),
+                  child: Center(
+                    child: Text(
+                      currency.code,
+                      style: AppText.label(12.5,
+                          color: c.textSecondary, weight: FontWeight.w700),
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
-      body: BlocBuilder<CurrencyCubit, AppCurrency>(
-        builder: (context, currency) {
-          return BlocBuilder<MarketCubit, MarketState>(
-            builder: (context, market) {
-              final snapshot = market.snapshot;
+          body: BlocBuilder<CurrencyCubit, AppCurrency>(
+            builder: (context, currency) {
+              return BlocBuilder<MarketCubit, MarketState>(
+                builder: (context, market) {
+                  final snapshot = market.snapshot;
 
-              if (snapshot == null) {
-                return Center(
-                  child: market.isLoading
-                      ? const CircularProgressIndicator(
-                          color: AppColors.gold)
-                      : Text(
-                          market.error ?? 'No data available.',
-                          style: const TextStyle(
-                              color: AppColors.textSecondary),
+                  if (snapshot == null) {
+                    return Center(
+                      child: market.isLoading
+                          ? CircularProgressIndicator(color: c.brass)
+                          : Text(
+                              market.error ?? context.l10n.nothingToShow,
+                              style: AppText.label(14,
+                                  color: c.textSecondary),
+                            ),
+                    );
+                  }
+
+                  final items = _sorted(snapshot.of(category), category);
+                  final rate =
+                      snapshot.rateFor(currency.code, currency.perUsd);
+
+                  return Column(
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(20, 0, 20, 14),
+                        child: CategoryTabs(),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                        child: Row(
+                          children: [
+                            _sortChip(
+                                context.l10n.highestPurity, _SortMode.purity),
+                            const SizedBox(width: 10),
+                            _sortChip(
+                                context.l10n.mostTraded, _SortMode.traded),
+                          ],
                         ),
-                );
-              }
-
-              final items = snapshot.of(category);
-              if (items.isEmpty) {
-                return const Center(
-                  child: Text('Nothing to show yet.',
-                      style: TextStyle(color: AppColors.textSecondary)),
-                );
-              }
-
-              final rate =
-                  snapshot.rateFor(currency.code, currency.perUsd);
-
-              return ListView.separated(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
-                itemCount: items.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder: (context, i) => _PriceRow(
-                  item: items[i],
-                  currencyCode: currency.code,
-                  rate: rate,
-                ),
+                      ),
+                      if (items.isEmpty)
+                        Expanded(
+                          child: Center(
+                            child: Text(
+                              context.l10n.nothingToShow,
+                              style: AppText.label(14,
+                                  color: c.textSecondary),
+                            ),
+                          ),
+                        )
+                      else
+                        Expanded(
+                          child: ListView.separated(
+                            padding:
+                                const EdgeInsets.fromLTRB(20, 0, 20, 28),
+                            itemCount: items.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 10),
+                            itemBuilder: (context, i) => _PriceRow(
+                              item: items[i],
+                              category: category,
+                              currencyCode: currency.code,
+                              rate: rate,
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
               );
             },
-          );
-        },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _sortChip(String label, _SortMode mode) {
+    final c = context.c;
+    final selected = _sort == mode;
+
+    return GestureDetector(
+      onTap: () => setState(() => _sort = mode),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? c.textPrimary : c.surface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: selected ? c.textPrimary : c.border),
+        ),
+        child: Text(
+          label,
+          style: AppText.label(12.5,
+              color: selected ? c.surface : c.textSecondary,
+              weight: FontWeight.w600),
+        ),
       ),
     );
   }
@@ -99,47 +171,47 @@ class AllPricesScreen extends StatelessWidget {
 
 class _PriceRow extends StatelessWidget {
   final PriceItem item;
+  final MarketCategory category;
   final String currencyCode;
   final double rate;
 
   const _PriceRow({
     required this.item,
+    required this.category,
     required this.currencyCode,
     required this.rate,
   });
 
   @override
   Widget build(BuildContext context) {
-    final trendColor = !item.hasChange
-        ? AppColors.textMuted
-        : (item.isPositive ? AppColors.positive : AppColors.negative);
+    final c = context.c;
+    final hasChange = item.hasChange;
+    final isDown = hasChange && !item.isPositive;
+    final trendColor =
+        !hasChange ? c.textMuted : (isDown ? c.negative : c.positive);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.divider, width: 0.6),
+        color: c.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: c.border),
       ),
+      padding: const EdgeInsetsDirectional.fromSTEB(14, 14, 16, 14),
       child: Row(
         children: [
           Container(
-            width: 44,
-            height: 44,
+            width: 42,
+            height: 42,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(13),
-              gradient: const LinearGradient(
-                colors: [AppColors.goldSoft, AppColors.goldDark],
-              ),
+              color: isDown ? c.surfaceAlt : c.brass,
+              borderRadius: BorderRadius.circular(11),
             ),
             child: Center(
               child: Text(
                 item.badge,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF3B2A08),
-                ),
+                style: AppText.label(13,
+                    color: isDown ? c.textPrimary : c.onBrass,
+                    weight: FontWeight.w700),
               ),
             ),
           ),
@@ -148,20 +220,14 @@ class _PriceRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.label,
-                    style: const TextStyle(
-                        fontSize: 13, color: AppColors.textSecondary)),
-                const SizedBox(height: 3),
-                Text(
-                  '${formatPrice(item.valueIn(rate))} '
-                  '$currencyCode ${item.unit}'
-                      .trim(),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
+                Text(assetDescriptor(context, category, item.id),
+                    style: AppText.micro(9.5, color: c.textMuted)),
+                const SizedBox(height: 4),
+                Text(formatPrice(item.valueIn(rate)),
+                    style: AppText.price(21, color: c.textPrimary)),
+                const SizedBox(height: 2),
+                Text('$currencyCode ${item.unit}'.trim(),
+                    style: AppText.label(11, color: c.textMuted)),
               ],
             ),
           ),
@@ -170,17 +236,26 @@ class _PriceRow extends StatelessWidget {
             children: [
               if (item.hasTrend)
                 SizedBox(
-                  width: 62,
-                  height: 26,
+                  width: 58,
+                  height: 24,
                   child: Sparkline(data: item.trend, color: trendColor),
                 ),
-              const SizedBox(height: 6),
-              Text(
-                formatPercentOrNull(item.changePercent) ?? '—',
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                  color: trendColor,
+              const SizedBox(height: 8),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                decoration: BoxDecoration(
+                  color: !hasChange
+                      ? c.surfaceAlt
+                      : (isDown ? c.negativeSoft : c.positiveSoft),
+                  borderRadius: BorderRadius.circular(7),
+                ),
+                child: Text(
+                  hasChange
+                      ? '${isDown ? '↓' : '↑'} ${formatPercentOrNull(item.changePercent)}'
+                      : '—',
+                  style: AppText.label(10.5,
+                      color: trendColor, weight: FontWeight.w700),
                 ),
               ),
             ],

@@ -1,238 +1,149 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_palette.dart';
+import '../../../../core/theme/app_text.dart';
+import '../../../../core/utils/context_ext.dart';
 import 'sparkline.dart';
 
 class LivePriceCard extends StatelessWidget {
-  final String title;
+  final String assetLabel;
   final String price;
   final String unit;
   final String? changePercent;
   final bool isPositive;
-  final String usdPerGram;
-  final String usdPerOunce;
+  final String usdLabel;
   final List<double> chartData;
+  final VoidCallback? onViewDetails;
 
   const LivePriceCard({
     super.key,
-    required this.title,
+    required this.assetLabel,
     required this.price,
     required this.unit,
-    this.changePercent,
+    required this.changePercent,
     required this.isPositive,
-    required this.usdPerGram,
-    required this.usdPerOunce,
-    this.chartData = const [
-      3,
-      3.4,
-      3.2,
-      3.9,
-      3.6,
-      4.2,
-      3.9,
-      4.6,
-      4.3,
-      4.9,
-      5.2
-    ],
+    required this.usdLabel,
+    required this.chartData,
+    this.onViewDetails,
   });
 
   @override
   Widget build(BuildContext context) {
-    final trendColor = isPositive ? AppColors.positive : AppColors.negative;
+    final c = context.c;
+    final l = context.l10n;
+    final trendColor = isPositive ? c.positive : c.negative;
 
     return Container(
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.cardLight, AppColors.card],
-        ),
-        border: Border.all(color: AppColors.divider, width: 0.6),
+        color: c.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: c.border, width: 1),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.25),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-          ),
+          BoxShadow(color: c.cardShadow, blurRadius: 18,
+              offset: const Offset(0, 6)),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Title + LIVE badge ──
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: AppColors.positive.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    _PulseDot(),
-                    SizedBox(width: 6),
-                    Text(
-                      'LIVE',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.5,
-                        color: AppColors.positive,
-                      ),
+          Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(20, 18, 20, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 7,
+                      height: 7,
+                      decoration: BoxDecoration(
+                          color: c.live, shape: BoxShape.circle),
                     ),
+                    const SizedBox(width: 7),
+                    Text(l.live, style: AppText.micro(10, color: c.live)),
+                    const Spacer(),
+                    if (changePercent != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: isPositive ? c.positiveSoft : c.negativeSoft,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              isPositive
+                                  ? Icons.trending_up_rounded
+                                  : Icons.trending_down_rounded,
+                              size: 13,
+                              color: trendColor,
+                            ),
+                            const SizedBox(width: 5),
+                            Text(changePercent!,
+                                style: AppText.label(11.5,
+                                    color: trendColor,
+                                    weight: FontWeight.w700)),
+                          ],
+                        ),
+                      )
+                    else
+                      Text(l.noChangeData,
+                          style: AppText.label(11, color: c.textMuted)),
                   ],
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-
-          // ── Big price ──
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                price,
-                style: const TextStyle(
-                  fontSize: 42,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.gold,
-                  height: 1,
-                  letterSpacing: -1,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Text(
-                  unit,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // ── Change chip ──
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: (changePercent == null ? AppColors.textMuted : trendColor)
-                  .withOpacity(0.12),
-              borderRadius: BorderRadius.circular(9),
-            ),
-            child: Text(
-              changePercent == null
-                  ? '— no change data yet'
-                  : '${isPositive ? '▲' : '▼'} $changePercent',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: changePercent == null ? AppColors.textMuted : trendColor,
-              ),
+                const SizedBox(height: 12),
+                Text(assetLabel,
+                    style: AppText.label(14.5,
+                        color: c.brass, weight: FontWeight.w600)),
+                const SizedBox(height: 8),
+                Text(price, style: AppText.price(40, color: c.brass)),
+                const SizedBox(height: 6),
+                Text(unit,
+                    style: AppText.label(13, color: c.textSecondary)),
+              ],
             ),
           ),
-          if (chartData.length >= 2) ...[
-            SizedBox(
-              height: 72,
-              width: double.infinity,
-              child: Sparkline(data: chartData),
-            ),
-            const SizedBox(height: 16),
-          ],
-          const SizedBox(height: 18),
-
-          // ── Chart ──
           SizedBox(
-            height: 72,
+            height: 92,
             width: double.infinity,
-            child: Sparkline(data: chartData),
+            child: Padding(
+              padding:
+                  const EdgeInsetsDirectional.fromSTEB(20, 8, 20, 0),
+              child: Sparkline(
+                data: chartData,
+                color: c.brassLight,
+                showEndDot: true,
+                dotRingColor: c.surface,
+              ),
+            ),
           ),
-          const SizedBox(height: 16),
-
-          // ── Footer ──
-          Row(
-            children: [
-              Text(
-                usdPerGram,
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  color: AppColors.textSecondary,
-                ),
+          Divider(height: 1, color: c.divider),
+          InkWell(
+            onTap: onViewDetails,
+            borderRadius:
+                const BorderRadius.vertical(bottom: Radius.circular(20)),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 20, vertical: 14),
+              child: Row(
+                children: [
+                  Text(usdLabel,
+                      style: AppText.label(12.5, color: c.textSecondary)),
+                  const Spacer(),
+                  Text(l.viewDetails,
+                      style: AppText.micro(11, color: c.brass)),
+                  Icon(
+                    context.isRtl
+                        ? Icons.chevron_left_rounded
+                        : Icons.chevron_right_rounded,
+                    size: 18,
+                    color: c.brass,
+                  ),
+                ],
               ),
-              const SizedBox(width: 14),
-              Container(width: 1, height: 14, color: AppColors.divider),
-              const SizedBox(width: 14),
-              Text(
-                usdPerOunce,
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
+            ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// Small breathing dot for the LIVE badge.
-class _PulseDot extends StatefulWidget {
-  const _PulseDot();
-
-  @override
-  State<_PulseDot> createState() => _PulseDotState();
-}
-
-class _PulseDotState extends State<_PulseDot>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _c;
-
-  @override
-  void initState() {
-    super.initState();
-    _c = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1100),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: Tween<double>(begin: 0.35, end: 1).animate(_c),
-      child: Container(
-        width: 6,
-        height: 6,
-        decoration: const BoxDecoration(
-          color: AppColors.positive,
-          shape: BoxShape.circle,
-        ),
       ),
     );
   }

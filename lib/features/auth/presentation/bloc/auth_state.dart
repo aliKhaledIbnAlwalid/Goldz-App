@@ -35,3 +35,6 @@ class AuthError extends AuthState {
 class AuthUnauthenticated extends AuthState {
   const AuthUnauthenticated();
 }
+class PasswordResetSent extends AuthState {
+  const PasswordResetSent();
+}
