@@ -17,7 +17,7 @@ flutter_native_splash:
   # if you specify this [required] background_image, then you should comment the 
   # [required] color in previous section. select one, they cant work together.
   background_image: "assets/splashLogo.png"
-  background_image_dark: "assets/splashLogo.png"
+  background_image_dark: "assets/Goldz_logo.png.png"
   # platform-specific background_image. will override general background_image if active:
   #background_image_android:      "assets/background-android.png"
   #background_image_dark_android: "assets/dark-background-android.png"
@@ -29,8 +29,8 @@ flutter_native_splash:
   # general image for all platform (except android 12+):
   # allows you to specify an image used in the splash screen. It must be a
   # png file and should be sized for 4x pixel density.
-  image: assets/goldzz.png
-  image_dark: assets/goldzz.png
+  image: assets/Goldz_logo.png
+  image_dark: assets/Goldz_logo.png
   # platform-specific image. will override general image if active:
   #image_android:       assets/splash-android.png
   #image_dark_android:  assets/splash-invert-android.png
@@ -113,8 +113,7 @@ flutter_native_splash:
     # without background: 1152×1152 px (fit within circle 768px in diameter)
     # ensure that the most important design elements of your image are placed within a circular area 
     image: assets/splashLogo.png    
-    image_dark: assets/splashLogo.png 
-
+    image_dark: assets/Goldz_logo.png
     # center-logo background color
     icon_background_color: "#dcb663"
     icon_background_color_dark: "#121212"

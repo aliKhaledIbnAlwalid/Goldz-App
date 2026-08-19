@@ -7,8 +7,6 @@ String categoryLabel(BuildContext context, MarketCategory category) =>
       MarketCategory.gold => context.l10n.gold,
       MarketCategory.silver => context.l10n.silver,
       MarketCategory.currency => context.l10n.currency,
-      // TODO: Handle this case.
-      MarketCategory.all => throw UnimplementedError(),
     };
 
 String sectionTitle(BuildContext context, MarketCategory category) =>
@@ -16,8 +14,7 @@ String sectionTitle(BuildContext context, MarketCategory category) =>
       MarketCategory.gold => context.l10n.otherKarats,
       MarketCategory.silver => context.l10n.otherPurities,
       MarketCategory.currency => context.l10n.otherRates,
-      // TODO: Handle this case.
-      MarketCategory.all => throw UnimplementedError(),
+     
     };
 
 /// Localized item name — replaces the hardcoded English in the model.
@@ -28,8 +25,6 @@ String itemLabel(
     MarketCategory.gold => l.karatLabel(item.id),
     MarketCategory.silver => l.silverLabel(item.id),
     MarketCategory.currency => item.label,
-    // TODO: Handle this case.
-    MarketCategory.all => throw UnimplementedError(),
   };
 }
 
@@ -57,9 +52,7 @@ String assetDescriptor(
       };
     case MarketCategory.currency:
       return l.descExchangeRate;
-    case MarketCategory.all:
-      // TODO: Handle this case.
-      throw UnimplementedError();
+    
   }
 }
 
@@ -72,8 +65,7 @@ int popularityRank(MarketCategory category, String id) {
     MarketCategory.gold => _goldPopularity,
     MarketCategory.silver => _silverPopularity,
     MarketCategory.currency => _currencyPopularity,
-    // TODO: Handle this case.
-    MarketCategory.all => throw UnimplementedError(),
+  
   };
   final index = list.indexOf(id);
   return index == -1 ? 999 : index;

@@ -153,13 +153,15 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
                           child: Container(
                             width: 120,
                             height: 120,
-                            decoration: BoxDecoration(
-                              color: c.surface,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: c.brass, width: 1.5),
-                            ),
-                            child: Icon(Icons.workspace_premium_rounded,
-                                size: 58, color: c.brass),
+                            // decoration: BoxDecoration(
+                            //   color: c.surface,
+                            //   shape: BoxShape.circle,
+                            //   border: Border.all(color: c.brass, width: 1.5),
+                            // ),
+                            child: Image.asset(
+                              'assets/Goldz_logo.png',
+                              fit: BoxFit.contain,
+                            )
                           ),
                         ),
                       ),

@@ -365,9 +365,6 @@ class HomeScreen extends StatelessWidget {
           _Stat(l.britishPound, formatPrice(gbp.valueIn(rate)), code),
           _Stat(l.saudiRiyal, formatPrice(sar.valueIn(rate)), code),
         ];
-      case MarketCategory.all:
-        // TODO: Handle this case.
-        throw UnimplementedError();
     }
   }
 

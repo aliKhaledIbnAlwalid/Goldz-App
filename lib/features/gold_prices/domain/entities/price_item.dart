@@ -1,22 +1,20 @@
 import 'package:equatable/equatable.dart';
 
-enum MarketCategory { gold, silver, currency, all }
+enum MarketCategory { gold, silver, currency}
 
 extension MarketCategoryX on MarketCategory {
   String get label => switch (this) {
         MarketCategory.gold => 'Gold',
         MarketCategory.silver => 'Silver',
         MarketCategory.currency => 'Currency',
-    // TODO: Handle this case.
-    MarketCategory.all => throw UnimplementedError(),
+   
       };
 
   String get sectionTitle => switch (this) {
         MarketCategory.gold => 'KARATS',
         MarketCategory.silver => 'PURITIES',
         MarketCategory.currency => 'RATES',
-    // TODO: Handle this case.
-    MarketCategory.all => throw UnimplementedError(),
+
       };
 }
 
